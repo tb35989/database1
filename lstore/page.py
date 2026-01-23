@@ -23,3 +23,5 @@ class Page:
 # The locations are in the form of a list (page, offset)
 # offset is kind of like the row number, for every individual page
 # 1 page has multiple rows
+
+# if the page runs out of space, create a new page and put the whole entry into a new page
