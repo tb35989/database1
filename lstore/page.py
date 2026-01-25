@@ -1,4 +1,6 @@
 
+# does this look right gang? I just decided to start working on it a little bit
+
 class Page:
 
     def __init__(self):
@@ -7,11 +9,13 @@ class Page:
         self.data = bytearray(4096)
 
     def has_capacity(self):
-        # does this look right gang?
         return 4096 - self.num_records
 
     def write(self, value):
         self.num_records += 1
+        # insert data into the index that is the number of records - 1 
+        # (since bytearrays start at index 0)
+        self.insert(self.num_records - 1, value)
         pass
 
 
