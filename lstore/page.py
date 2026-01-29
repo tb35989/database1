@@ -9,6 +9,8 @@ class Page:
         maxCapacity = 4096 // 8
         return maxCapacity - self.num_records
 
+    # note: when writing data in, call the write function from the page_list.py file,
+    # not this one
     def write(self, value):
         offset = self.num_records * 8
         self.data[offset:offset+8] = value.to_bytes(8)
