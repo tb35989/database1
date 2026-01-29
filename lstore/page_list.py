@@ -9,10 +9,15 @@ class PageList:
     def __init__(self):
         self.connectedColumns = []
 
+    # write data into the correct writeable column. if the column is full,
     # add a new page to the pagelist
-    def connectAColumn(self):
-        newPage = Page()
-        self.connectedColumns.append(newPage)
+    def write(self, value):
+        if len(self.connectedColumns) > 0 and self.writeableColumn.has_capacity() > 0:
+            self.writeableColumn.write(value)
+        else:
+            newPage = Page()
+            self.connectedColumns.append(newPage)
+            newPage.write(value)
     
     # return the current writeable column
     def writableColumn(self):
