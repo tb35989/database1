@@ -10,7 +10,7 @@ class Page:
         return maxCapacity - self.num_records
 
     def write(self, value):
-        self.insert((self.num_records) * 8, value)
-        # let self.num_records = the number of 8-byte records that are stored
+        offset = self.num_records * 8
+        self.data[offset:offset+8] = value.to_bytes(8)
         self.num_records += 1
         pass
