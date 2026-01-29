@@ -1,7 +1,8 @@
 from lstore.page import Page
 
 class PageDirectory:
-    def __init__(self,):
+    def __init__(self):
         pass
 
-    def 
+    def findPages(self, RID):
+        pass
