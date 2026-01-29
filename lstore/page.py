@@ -13,6 +13,7 @@ class Page:
 
     def write(self, value):
         self.num_records += 1
+<<<<<<< Updated upstream
         # insert data into the index that is the number of records - 1 
         # (since bytearrays start at index 0)
         self.insert(self.num_records - 1, value)
@@ -30,3 +31,15 @@ class Page:
 # 1 page has multiple rows
 
 # if the page runs out of space, create a new page
+=======
+        #self.data[0:8] = value.to_bytes(8), increment
+        pass
+
+
+# Partition table into different ranges 
+#create six active tables for 6 columns - have each include new data. then update page directory
+#create an array to maintain all the pages
+#first go to page directory, then
+#page directory is a map from a string to an array 
+#create a new py file for page directory
+>>>>>>> Stashed changes
