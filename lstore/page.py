@@ -1,6 +1,3 @@
-# test
-# does this look right gang? I just decided to start working on it a little bit
-
 class Page:
 
     def __init__(self):
@@ -9,13 +6,13 @@ class Page:
         self.data = bytearray(4096)
 
     def has_capacity(self):
-        return 4096 - self.num_records
+        maxCapacity = 4096 // 8
+        return maxCapacity - self.num_records
 
     def write(self, value):
+        self.insert((self.num_records) * 8, value)
+        # let self.num_records = the number of 8-byte records that are stored
         self.num_records += 1
-        # insert data into the index that is the number of records - 1 
-        # (since bytearrays start at index 0)
-        self.insert(self.num_records - 1, value)
         pass
 
 
