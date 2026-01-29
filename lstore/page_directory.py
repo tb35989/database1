@@ -5,4 +5,6 @@ class PageDirectory:
         pass
 
     def findPages(self, RID):
+        # given a certain RID, return the correlating indirection column, schema column, 
+        # and data columns, with the slot # (basically, which row)
         pass
