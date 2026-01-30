@@ -37,6 +37,7 @@ class PageDirectory:
 
     # given a certain RID, return the correlating pages
     # (assumes that RID is the first column in the table)
+    # (returns the correlating pages in a list)
     def findRow(self, RID):
         # seach the page directory for the RID
         for i in range(len(self.pageDirectory)):
