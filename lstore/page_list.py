@@ -3,7 +3,8 @@ from lstore.page import Page
 # Does everything the page directory needs to do, except linking RIDs to pages.
 
 class PageList:
-    # create the pagelist
+    # create the pagelist: a list of pages that together create a column. think of it 
+    # like a vertical list of columns.
     def __init__(self):
         self.connectedColumns = []
         newPage = Page()
