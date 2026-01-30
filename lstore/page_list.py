@@ -23,4 +23,19 @@ class PageList:
             self.connectedColumns.append(newPage)
             newPage.write(value)
 
+    # returns a list where the first item is the page where the data is found
+    # and the second item is the slot #/offset # where the data is found on that page
+    # if the data is not found, returns "not found"
+    def find(self, value):
+        j = 0
+        location = []
+        while j < len(self.connectedColumns):
+            if self.connectedColumns[j].find(value) == "not found":
+                j += 1
+            else:
+                location.append(self.connectedColumns[j])
+                location.append(self.connectedColumns[j].find(value))
+                return location
+        return "not found"
+
     
