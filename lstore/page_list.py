@@ -1,8 +1,6 @@
 from lstore.page import Page
 
-# I'm a little confused as to how the page directory works. This file performs some of the 
-# functions the page directory is supposed to do, but I don't know how to connect RIDs to 
-# adjacent columns in this file. It seems to me that that would need to go in the table file?
+# Does everything the page directory needs to do, except linking RIDs to pages.
 
 class PageList:
     # create the pagelist
