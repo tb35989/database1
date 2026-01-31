@@ -21,6 +21,19 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
+        #returns the RID for a given primary_key value 
+        #can there be multiple RIDS? doesn't primary_key col have only unique values?
+        rid = self.table.index.locate(self.table.key, primary_key)
+        #returns False if record doesn't exist 
+        if len(rid) == 0:
+            return False
+        #need to find position of table in pageDirectory list, gets its cols list, accesses the RID col (do not think those r the base pages tho)
+        #invalidating base record in the RID col to a special value, -1
+        #is it enough to update the RID col or do we need to go through the rest of the cols in that record?
+        position  = rid_base_col.find(rid)
+        slot = position[1]
+        rid_base_col.update(slot, -1)
+        #have to set tail records to -1 using indirection col but how can i access?
         pass
     
     
