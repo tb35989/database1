@@ -7,13 +7,16 @@ class Page:
 
     def has_capacity(self):
         maxCapacity = 4096 // 8
-        return maxCapacity - self.num_records
+        if maxCapacity > self.num_records: # Checks capacity
+            return True
+        else:
+            return False
 
     # note: when writing data in, call the write function from the page_list.py file,
     # not this one
     def write(self, value):
         offset = self.num_records * 8
-        self.data[offset:offset+8] = value.to_bytes(8)
+        self.data[offset:offset+8] = value.to_bytes(8, byteorder='big')
         self.num_records += 1
         pass
 
