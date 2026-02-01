@@ -27,7 +27,7 @@ class Table:
         self.key = key
         self.key_to_rid = {} # Set up dictionary for key to rid mapping
         self.num_columns = num_columns
-        self.index = Index(self)
+        self.index = Index(self) 
         self.merge_threshold_pages = 50  # The threshold to trigger a merge
         # Initialize page directories for new base and tail page lists 
         self.total_cols = num_columns + 4
@@ -68,6 +68,23 @@ user_columns = list/tuple of values to fill into user columns
             record[4 + i] = val # Initialize index to ignore metadata cols (index 0-3)
         return record
 
+    def insert(self,*user_columns):
+        # Check parameters of insert (correct number of  user columns are included)
+        if len(user_columns) != self.num_columns:
+            return False
+        # Check for duplicate key already in table
+        key_val = user_columns[self.key] # Identify value of new key
+        if key_val in self.key_to_rid: 
+            return False
+        
+        base_rid = self.new_base_rid() # Assign base rid to new record
+        record = self.make_base_record(base_rid, user_columns) # Call on make_base_record to fill in columns
+        
+        # REQUIRES CHANGES TO PAGE_DIRECTORY.PY - need method to write_base_record
+        self.base_pd.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
+
+        self.key_to_rid[key] = base_rid # Add key and assigned RID of new observation to key->RID map 
+        return True # Indicates success of insert
 
     def select(self,key):
         pass
@@ -75,9 +92,7 @@ user_columns = list/tuple of values to fill into user columns
     def update(self,key):
         pass
     
-    def insert(self,key):
-        self.key_to_rid[key] = base_rid # Add key and assigned RID of new observation to key->RID map 
-        pass
+
 
     def delete(self,key):
         pass
