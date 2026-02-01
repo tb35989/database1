@@ -43,13 +43,16 @@ class Index:
     # optional: Drop index of specific column
     def drop_index(self, column_number):
         self.indices[column_number] = None
+        
     # functions that are helpful
     def add_record(self, rid, columns):
+        pass
 
-
-     def update_record(self, rid, old_columns, new_columns): 
+    def update_record(self, rid, old_columns, new_columns): 
+        pass
 
     def remove_record(self, rid, columns):
+        pass
 
         
 
