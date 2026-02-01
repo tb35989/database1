@@ -10,7 +10,7 @@ class Index:
     def __init__(self, table):
         #  One index for each table. All our empty initially.
         # Each column has unique index 
-        # When a column is not indexed, its slot stays None.
+        # shoes None if a column is not indexed.
         self.indices = [None] * table.num_columns
         self.table = table
         if hasattr(table, "key") and table.key is not None:
@@ -18,18 +18,28 @@ class Index:
 
     # returns the location of all records with the given value on column "column"
     def locate(self, column, value):
-        ind = self.indices[column]
-        if ind is not None:
-            return list(ind.get(value, []))
-        pairs = []
-        for rid, columns in self._iter_records():
+        # if table.key_to_rid is present, faster lookup.
+        if self.rid_key() and column == self.table.key:
+            rid = self.table.key_to_rid.get(value)
+            return [] if rid is None else [rid]
+       
+        index = self.indices[column]   # check if a index already exists
+        if index is not None:
+            return list(index.get(value, []))
+     
+        pairs = []  # No index, do full scan
+        for rid, columns in self.rid_column():
             if column < len(columns) and columns[column] == value:
-                pairs.append((rid, columns[column]))
+                pairs.append(rid)
         return pairs
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     def locate_range(self, begin, end, column):
         ind = self.indices[column]
         pairs = []
+
+
+
+
 
       
 
@@ -45,17 +55,24 @@ class Index:
         self.indices[column_number] = None
         
     # functions that are helpful
-    def add_record(self, rid, columns):
-        pass
-
-    def update_record(self, rid, old_columns, new_columns): 
-        pass
-
-    def remove_record(self, rid, columns):
-        pass
+    def rid_key(self):
+        return hasattr(self.table, "key_to_rid") and isinstance(self.table.key_to_rid, dict)
 
         
+    def rid_column(self):    #create iterator to see rid and columns   
+        base_pd = self.table.base_pd
+        base_columns = len(base_pd.pageDirectoryBase)
+        if base_columns == 0:
+            return  # No records
 
+        ridC = base_pd.pageDirectoryBase[0]
+        otherC = base_pd.pageDirectoryBase[1:]
+
+        num_records = ridC.num_records()
+        for i in range(num_records):
+            rid = ridC.get_value_at(i)
+            columns = [col.get_value_at(i) for col in otherC]
+            yield rid, columns
   
 
        
