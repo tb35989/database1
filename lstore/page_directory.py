@@ -1,49 +1,73 @@
 from lstore.page_list import PageList
 
 class PageDirectory:
-    # pagedirectory: a list of all the tables in the dataset. the format is tableName, table
-    # so the list might look something like this:
-    # [apples, [applesColumn1, applesColumn2], bananas, [bananasColumn1, bananasColumn2, bananasColumn3]]
+    # pagedirectory: a list of pagelists that make up a table. think of it like a horizontal
+    # list of pages
+    # contains a list of Base pages and a list of Tail pages. Both can perform the same 
+    # functions, they are just kept differentiated.
     def __init__(self):
-        self.pageDirectory = []
+        self.pageDirectoryBase = []
+        self.pageDirectoryTail = []
 
-    # adds a table to the page directory.
-    def addTable(self, tableName):
-        self.pageDirectory.append(tableName)
-        actualTable = []
-        self.pageDirectory.append(actualTable)
-
-    # adds a column to the table of given name. the table class is responsible for 
-    # remembering the index of each column. 
-    def addColumnToTable(self, tableName):
-        newColumn = PageList()
-        # search the pagedirectory for the right table and 
-        # append the column to the table
-        if self.pageDirectory.index(tableName) >= 0:
-            self.pageDirectory[self.pageDirectory.index(tableName) + 1].append(newColumn)
-        else:
-            return "table not found"
-    
-    # writes given data into the next available slot of columnIndex'th column of the
-    # table with the name tableName. 
-    def writeValueIntoColumn(self, tableName, columnIndex, value):
-        # checks whether the table exists in the page directory, and 
-        # whether the given columnIndex is a valid index
-        if self.pageDirectory.index(tableName) >= 0 and (columnIndex + 1) <= len(self.pageDirectory[self.pageDirectory.index(tableName) + 1]):
-            # writes the data into the column
-            self.pageDirectory[self.pageDirectory.index(tableName) + 1][columnIndex].write(value)
-        else:
-            return "table not found or column index invalid"
-
-    # given a certain RID, return the correlating pages
-    # (assumes that RID is the first column in the table)
-    # (returns the correlating pages in a list)
-    def findRow(self, RID):
-        # seach the page directory for the RID
-        for i in range(len(self.pageDirectory)):
-            i += 1
-            if self.pageDirectory[i][0].find(RID) == "not found":
-                i += 1
+    # given an RID, returns the corresponding columns (not including the RID column), 
+    # unless the RID is not found.
+    # (assumes the first column in the table is RID)
+    # (searches both base and tail records)
+    def findPageLists(self, RID):
+        if self.pageDirectoryTail[0].find(RID) == "not found":
+            if self.pageDirectoryBase[0].find(RID) == "not found":
+                return "RID not found"
             else:
-                return self.pageDirectory[i][1:]
-        return "RID not found"
+                return self.pageDirectoryBase[1:]
+        else: 
+            return self.pageDirectoryTail[1:]
+
+
+
+    # BASE RECORDS
+
+    # adds the specified number of columns to the table. Doesn't write anything in though.
+    def addColumnBase(self, numColumns):
+        for i in range(numColumns):
+            newColumn = PageList()
+            self.pageDirectoryBase.append(newColumn)
+
+    # writes specified data into the next available slot in the specified column
+    # returns the slot number
+    def writeValueIntoColumnBase(self, columnID, value):
+        if columnID < len(self.pageDirectoryBase):
+            return self.pageDirectoryBase[columnID].write(value)
+        else:
+            return "column ID invalid"
+        
+    # given a columnID, returns the corresponding pageList
+    def findColumnBase(self, columnID):
+        if columnID < len(self.pageDirectoryBase):
+            return self.pageDirectoryBase[columnID]
+        else:
+            return "column ID invalid"
+        
+
+
+    # TAIL RECORDS
+
+    # adds the specified number of columns to the table. Doesn't write anything in though.
+    def addColumnTail(self, numColumns):
+        for i in range(numColumns):
+            newColumn = PageList()
+            self.pageDirectoryTail.append(newColumn)
+
+    # writes specified data into the next available slot in the specified column
+    # returns the slot number
+    def writeValueIntoColumnTail(self, columnID, value):
+        if columnID < len(self.pageDirectoryTail):
+            return self.pageDirectoryTail[columnID].write(value)
+        else:
+            return "column ID invalid"
+
+    # given a columnID, returns the corresponding pageList
+    def findColumnTail(self, columnID):
+        if columnID < len(self.pageDirectoryTail):
+            return self.pageDirectoryTail[columnID]
+        else:
+            return "column ID invalid"
