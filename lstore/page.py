@@ -12,13 +12,14 @@ class Page:
         else:
             return False
 
-    # note: when writing data in, call the write function from the page_list.py file,
+    # note: when writing data in, call the write function from the page_directory.py file,
     # not this one
+    # returns the location (slot/offset #) of the written in data
     def write(self, value):
         offset = self.num_records * 8
         self.data[offset:offset+8] = value.to_bytes(8, byteorder='big')
         self.num_records += 1
-        pass
+        return self.num_records - 1
 
     def find(self, value):
         # return the slot #/offset # for the given data (needs to be coded)
