@@ -55,7 +55,7 @@ class PageDirectory:
     # writes specified data into the next available slot in the specified column
     # returns the slot number
     def writeValueIntoColumn(self, columnID, value):
-        if columnID < len(self.pageDirectoryTail:
+        if columnID < len(self.pageDirectoryTail):
             return self.pageDirectoryTail[columnID].write(value)
         else:
             return "column ID invalid"
