@@ -27,3 +27,10 @@ class PageDirectory:
             return "RID not found"
         else: 
             return self.pageDirectory[1:]
+        
+    # given a columnID, returns the corresponding pageList
+    def findColumn(self, columnID):
+        if columnID < len(self.pageDirectory):
+            return self.pageDirectory[columnID]
+        else:
+            return "column ID invalid"
