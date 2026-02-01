@@ -21,6 +21,7 @@ class Database():
     """
     def create_table(self, name, num_columns, key_index):
         table = Table(name, num_columns, key_index)
+        self.tables.append(table) # adds table to list
         return table
 
     
@@ -28,11 +29,17 @@ class Database():
     # Deletes the specified table
     """
     def drop_table(self, name):
-        pass
+        self.tables.remove(name)
+        return f"{name} has been removed"
 
     
     """
     # Returns table with the passed name
     """
     def get_table(self, name):
-        pass
+        # Sequentially searches for table in list
+        # Potentially could be done more efficiently (maybe a dict), but list was already provided
+        for table in self.tables:
+            if table == name:
+                return table
+        return None
