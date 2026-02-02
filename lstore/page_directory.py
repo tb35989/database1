@@ -46,6 +46,22 @@ class PageDirectory:
             return self.pageDirectoryBase[columnID]
         else:
             return "column ID invalid"
+    
+    # (a work in progress) writes data into a new base record row. assumes the RID 
+    # column is the first column in the table, and then writes the rest of the data (record)
+    # into the next columns
+    # also checks to make sure the row all has the same slot #
+    def write_base_record(self, rid, record, rid_col):
+        slotNumbers = []
+        slotNumbers.append(self.pageDirectoryBase[0].write(rid))
+        for i in range(len(record)):
+            slotNumbers.append(self.pageDirectory[i + 1].write(record[i]))
+        for i in range(len(slotNumbers) - 1):
+            if slotNumbers[0] != slotNumbers[i + 1]:
+                return "error"
+        return "success"
+        
+
         
 
 
