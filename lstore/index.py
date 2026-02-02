@@ -3,7 +3,7 @@ A data strucutre holding indices for various columns of a table. Key column shou
 indexd by default, other columns can be indexed through this object. Indices are
 usually B-Trees, but other data structures can be used as well.
 """
-
+from table import Table 
 
 class Index:
 
@@ -75,4 +75,4 @@ class Index:
             yield rid, columns
   
 
-       
+    #hashtbale for table.py
