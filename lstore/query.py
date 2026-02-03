@@ -20,6 +20,7 @@ class Query:
     # Returns True upon succesful deletion
     # Return False if record doesn't exist or is locked due to 2PL
     """
+    #record locked due to 2PL, set all other col vals; remove from index 
     def delete(self, primary_key):
         #returns the RID for a given primary_key value 
         rid = self.table.index.locate(self.table.key, primary_key)
@@ -32,16 +33,14 @@ class Query:
 
         #setting the base RID to a special value, -1 (invalidating)
         #self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, -1)
-        
-        #need to code if there are multiple updates in the tail pages
+
         if indirection != 0:
-            t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(TAIL RID)
+            t_rid = indirection
+            t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(t_rid)
             t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
             self.table.tail_pd.pageDirectoryTail[0].connectedColumns[t_index].write(t_slot, -1)
 
         pass 
-
-    #need to still need to remove from the index
 
     """
     # Insert a record with specified columns
@@ -62,49 +61,40 @@ class Query:
     # Returns False if record locked by TPL
     # Assume that select will never be called on a key that doesn't exist
     """
-    #need to change according to new page directory file
+    #search_key as primary key when creating Record object 
+    #STILL NEED TO RETURN FALSE IF RECORD LOCKED BY TPL
     def select(self, search_key, search_key_index, projected_columns_index):
         #may return multiple rids depending on search key 
-        rid = self.table.index.locate(search_key_index, search_key)
+        rid_list = self.table.index.locate(search_key_index, search_key)
         recordObjects = []
-        #returns all columns of the record
-        recordColumns = self.table.pageDirectory.findRow(rid)
-        positions = []
-        #loop over all the cols to find the page and slot of the record in each col
-        for i in recordColumns:
-            col_location = i.find(rid)
-            positions.append(col_location)
-            
-        #need a function to retrieve the latest indirection val - table.py
+        #returns False if no record exists in the given range
+        if len(rid_list) == 0:
+            return False
+        #if all RIDs are -1 (indication that they are all deleted)
+        if all(i == -1 for i in rid_list):
+            return False
+        for i in rid_list:
+            #skips RIDS which are -1 (indication that these records are deleted)
+            if i == -1:
+                continue
+            b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(i)
+            b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
+            indirection = self.table.base_pd.pageDirectoryBase[1].connectedColumns[b_index].read(b_slot)
+            #if no updates exist, create a Record object using the given column's values and append to the list
+            if indirection == 0:
+                record = Record(rid = i, key = search_key, columns = [self.table.base_pd.pageDirectoryBase[j + 4].connectedColumns[b_index].read(b_slot)
+                                                                      for j, include in enumerate(projected_columns_index) if include == 1])
+                recordObjects.append(record)
+            else:
+                #access the tail record's values and create a Record object, append to the list
+                t_rid = indirection
+                t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(t_rid)
+                t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
+                record = Record(rid = t_rid, key = search_key, columns = [self.table.tail_pd.pageDirectoryTail[j+4].connectedColumns[t_index].read(t_slot)
+                                                                          for j, include in enumerate(projected_columns_index) if include == 1])
+                recordObjects.append(record)
+        return recordObjects 
 
-        values = []
-        if indirection == 0:
-            for index, include in enumerate(projected_columns_index):
-                #returns values of chosen columns (using projected_columns_index)
-                if include == 1:
-                    page, slot = positions[index]
-                    value = page.get_value(slot) #need to implement a function that retrieves a value from a given slot
-                    values.append(value)   
-        else:
-            #returning the latest tail record
-            tail_cols = self.table.pageDirectory.findRow(indirection)
-            tail_positions = []
-            #returning the page and slot of each column associated with the tail page's RID
-            for i in tail_cols:
-                col_location = i.find(indirection)
-                tail_positions.append(col_location)
-                #returning the values of the chosen cols
-                for index, include in enumerate(projected_columns_index):
-                    if include == 1:
-                        page, slot = tail_positions[index]
-                        value = page.get_value(slot)
-                        values.append(value)
-    
-        #returning the values of the columns as Record objects - need to extract primary key
-        recordObjects.append(Record(rid = rid, key = PRIMARY_KEY, columns = values))
-        return recordObjects
-    
-        #STILL NEED TO RETURN FALSE IF RECORD LOCKED BY TPL
 
 
     
@@ -139,6 +129,7 @@ class Query:
     # Returns the summation of the given range upon success
     # Returns False if no record exists in the given range
     """
+    #check which constants are RID_COL and INDIRECTION_COL
     def sum(self, start_range, end_range, aggregate_column_index):
         sum = 0
         #returns a list of RIDs which are in the given range 
@@ -146,30 +137,33 @@ class Query:
         #returns False if no record exists in the given range
         if len(rid_list) == 0:
             return False
-        
+        #if all RIDs are -1 (indication that they are all deleted)
+        if all(i == -1 for i in rid_list):
+            return False
         for i in rid_list:
-            #need to skip RIDs which are -1 (deleted)
+            #skips RIDS which are -1 (indication that these records are deleted)
+            if i == -1:
+                continue
+            #returns the page and slot where the RID is stored in the base RID col (col 0)
+            b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(i)
+            #returns which page index this RID was found in (can read from the same page index in the other cols)
+            b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
+            #does indirection value change in base col to indicate an update?
+            indirection = self.table.base_pd.pageDirectoryBase[1].connectedColumns[b_index].read(b_slot) #need read function
             if indirection == 0:
-                #returns the page and slot where the RID is stored in the base RID col (col 0)
-                b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(i)
-                #returns which page index this RID was found in (can read from the same page index in the other cols)
-                b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
                 #reads the value stored at the same slot of the same page index in the aggregate_column
-                value = self.table.base_pd.pageDirectoryBase[aggregate_column_index].connectedColumns[b_index].read(b_slot) #need a read function
+                value = self.table.base_pd.pageDirectoryBase[aggregate_column_index + 4].connectedColumns[b_index].read(b_slot) #need a read function
                 #adds this value to the sum
                 sum += value
             else:
                 #need to understand how the indirection col points to the tail RID
                 t_rid = indirection
                 #index - rid - page directory - come to the record and see indirection has been updated - follow indirection for tail record
-                #rid - page directory - find exactly where that record is - go read it
-                #how to find rid to begin with? is the user is lookign for a particular record, they give you prmary key, look up index, and from index it tells you rid
                 #index to rid to page directory to base page to base record 
-                #after base record, read indirection, if not 0, follow indirection pointer to read tail record (indirection holds rid of tail record);
-                #could ask page directiory where this rid is - adress it returns is that of the tail record 
+                #after base record, read indirection, if not 0, follow indirection pointer to read tail record (indirection holds rid of tail record) - page directory
                 t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(t_rid)
                 t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
-                value = self.table.tail_pd.pageDirectoryTail[aggregate_column_index].connectedColumns[t_index].read(t_slot)
+                value = self.table.tail_pd.pageDirectoryTail[aggregate_column_index + 4].connectedColumns[t_index].read(t_slot)
                 sum += value
         return sum
 
@@ -183,9 +177,57 @@ class Query:
     # Returns the summation of the given range upon success
     # Returns False if no record exists in the given range
     """
+    #realized indirection col points to the latest tail record's RID - ask TA how to access previous versions?
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
-        pass
-
+        sum = 0
+        #returns a list of RIDs which are in the given range
+        rid_list = self.index.locate_range(start_range, end_range, self.table.key)
+        #returns False if no record exists in the given range
+        if len(rid_list) == 0:
+            return False
+        #if all RIDs are -1 (indication that they are all deleted)
+        if all(i == -1 for i in rid_list):
+            return False
+        for i in rid_list:
+            #skips RIDS which are -1 (indication that these records are deleted)
+            if i == -1:
+                continue 
+            #returns the page and slot where the RID is stored in the base RID col (col 0)
+            b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(i)
+            #returns which page index this RID was found in (can read from the same page index in the other cols)
+            b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
+            #sets the current rid and current version counters 
+            curr_rid = i
+            curr_version = 0
+            #loops through the indirection until it reaches the given relative_version
+            while curr_version < relative_version:
+                #indirection points to the latest tail RID or to 0 if there were no updates
+                indirection = self.table.base_pd.pageDirectoryBase[1].connectedColumns[b_index].read(b_slot)
+                #no tail records exist if indirection equals 0
+                if indirection == 0:
+                    break
+                else:   
+                    #moves to the tail record's RID, as indicated by the indirection value
+                    t_rid = indirection
+                    ##returns the page and slot where the tail RID is stored
+                    t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(t_rid)
+                    #returns which page index this tail RID was found in (can read from the same page index in the other cols)
+                    t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
+                    #overwrite the base record's pointers with the tail record's pointers so next loop starts from the tail record 
+                    #Base → Tail1 → Tail2 → Tail3 → ... → latest
+                    curr_rid = t_rid
+                    b_page, b_slot, b_index = t_page, t_slot, t_index
+                    #increase the current version
+                    curr_version += 1
+            #if there were no updates to the base record, take the original value
+            if curr_version == 0:
+                value = self.table.base_pd.pageDirectoryBase[aggregate_column_index + 4].connectedColumns[b_index].read(b_slot)
+            else:
+                #takes the tail record's value if there was an update (as per the current_version)
+                value = self.table.tail_pd.pageDirectoryTail[aggregate_column_index + 4].connectedColumns[b_index].read(b_slot)
+            #adds the value to the total sum
+            sum += value
+        return sum
     
     """
     incremenets one column of the record
