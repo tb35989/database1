@@ -68,6 +68,14 @@ user_columns = list/tuple of values to fill into user columns
             record[4 + i] = val # Initialize index to ignore metadata cols (index 0-3)
         return record
 
+    #CUMULATIVE UPDATE
+    def make_tail_record(self,corr_base_rid,tail_rid,updated_cols):
+        record = [0] * self.total_cols
+        record[INDIRECTION_COLUMN] = corr_base_rid #ADJUST TO ACOMMODATE FOR PREV TAIL PAGES, RIGHT NOW IS JUST FIRST UPDATE BASED
+        record[RID_COLUMN] = tail_rid 
+        record[TIMESTAMP_COLUMN] = int(time()) 
+
+
     def insert(self,*user_columns):
         # Check parameters of insert (correct number of  user columns are included)
         if len(user_columns) != self.num_columns:
@@ -86,21 +94,22 @@ user_columns = list/tuple of values to fill into user columns
         self.key_to_rid[key] = base_rid # Add key and assigned RID of new observation to key->RID map 
         return True # Indicates success of insert
 
-    def select(self,key):
-        pass
-
-    def update(self,key):
-        pass
-
-    def delete(self,key):
+    def update(self,key,updated_cols):
+        tail_rid = self.new_tail_rid() # Assign tail rid to new record
+        record = self.make_tail_record(tail_rid, updated_cols)
         pass
 
     #Set up a function to access the actual value given a RID and column
     #To be used for indirection setting (will specify column as INDIRECTION_COLUMN) 
-    def read_base_value(self,rid,column): # Return value stored within a physical slot in a page
-        rid_page_index, slot = self.pageDirectoryBase[RID_COLUMN].find(rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
+    def read_base_value(self,base_rid,column): # Return value stored within a physical slot in a page
+        rid_page_index, slot = self.pageDirectoryBase[RID_COLUMN].find(base_rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
         page_list = self.pageDirectoryBase[column] # Locate page list for corresponding column 
         page = page_list.pages[rid_page_index] # Use the specific index of the RID in correct page list to find value for that observation, at that column
         return page.read(slot) # Return value stored at that specified slot
 
- 
+    #Replicate above logic for tail pages
+    def read_tail_value(self,tail_rid,column):
+        rid_page_index, slot = self.pageDirectoryTail[RID_COLUMN].find(tail_rid)
+        page_list = self.pageDirectoryTail[column]
+        page = page_list.pages[rid_page_index]
+        return page.read(slot)
