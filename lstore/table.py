@@ -91,9 +91,16 @@ user_columns = list/tuple of values to fill into user columns
 
     def update(self,key):
         pass
-    
-
 
     def delete(self,key):
         pass
+
+    #Set up a function to access the actual value given a RID and column
+    #To be used for indirection setting (will specify column as INDIRECTION_COLUMN) 
+    def read_base_value(self,rid,column): # Return value stored within a physical slot in a page
+        rid_page_index, slot = self.pageDirectoryBase[RID_COLUMN].find(rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
+        page_list = self.pageDirectoryBase[column] # Locate page list for corresponding column 
+        page = page_list.pages[rid_page_index] # Use the specific index of the RID in correct page list to find value for that observation, at that column
+        return page.read(slot) # Return value stored at that specified slot
+
  
