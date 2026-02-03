@@ -24,7 +24,6 @@ class Page:
     def find(self, value):
         # return the slot #/offset # for the given data (needs to be coded)
         # if the data is not found, return "not found"
-        pass
 
     def next_offset(self):
         return self.num_records * 8
