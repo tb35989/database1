@@ -25,3 +25,19 @@ class Page:
         # return the slot #/offset # for the given data (needs to be coded)
         # if the data is not found, return "not found"
         pass
+
+class BasePage:
+    def __init__(self, num_cols):
+        self.rid = Page()
+        self.indirection = Page()
+        self.time = Page()
+        self.schema_encoding = Page()
+        self.pages = [Page() for _ in range(num_cols)]
+
+class TailPage:
+    def __init__(self, num_cols):
+        self.rid = Page()
+        self.indirection = Page()
+        self.time = Page()
+        self.schema_encoding = Page()
+        self.pages = [Page() for _ in range(num_cols)]
