@@ -26,6 +26,9 @@ class Page:
         # if the data is not found, return "not found"
         pass
 
+    def next_offset(self):
+        return self.num_records * 8
+
 class BasePage:
     def __init__(self, num_cols):
         self.rid = Page()
@@ -33,6 +36,17 @@ class BasePage:
         self.time = Page()
         self.schema_encoding = Page()
         self.pages = [Page() for _ in range(num_cols)]
+    
+    def get_offset(self):
+        return self.rid.next_offset()
+    
+    def append_record(self, rid, record, rid_col):
+        self.indirection.write(record[0])
+        self.rid.write(record[1])
+        self.time.write(record[2])
+        self.schema_encoding.write(record[3])
+        for i in range(4, len(record)):
+            self.pages[i-4].write(record[i])
 
 class TailPage:
     def __init__(self, num_cols):
@@ -41,3 +55,14 @@ class TailPage:
         self.time = Page()
         self.schema_encoding = Page()
         self.pages = [Page() for _ in range(num_cols)]
+
+    def get_offset(self):
+        return self.rid.next_offset()
+    
+    def append_record(self, rid, record, rid_col):
+        self.indirection.write(record[0])
+        self.rid.write(record[1])
+        self.time.write(record[2])
+        self.schema_encoding.write(record[3])
+        for i in range(4, len(record)):
+            self.pages[i-4].write(record[i])
