@@ -12,7 +12,7 @@ class PageRange:
         last_page = self.base_pages[-1]
         # Checks if there is space in base page
         if last_page.get_offset == 4096: 
-            add_base_page()
+            self.add_base_page()
             last_page.append_record(rid, record, rid_column)
         else:
             last_page.append_record(rid, record, rid_column) 
