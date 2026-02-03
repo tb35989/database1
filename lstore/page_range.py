@@ -31,7 +31,7 @@ class PageRange:
         last_page = self.tail_pages[-1]
         # Checks if there is space in tail page
         if last_page.get_offset == 4096: 
-            add_tail_page()
+            self.add_tail_page()
             last_page.append_record(rid, record, rid_column)
         else:
             last_page.append_record(rid, record, rid_column) 
