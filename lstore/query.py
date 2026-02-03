@@ -22,21 +22,27 @@ class Query:
     """
     def delete(self, primary_key):
         #returns the RID for a given primary_key value 
-        #can there be multiple RIDS? doesn't primary_key col have only unique values?
         rid = self.table.index.locate(self.table.key, primary_key)
         #returns False if record doesn't exist 
         if len(rid) == 0:
             return False
-        #need to find position of table in pageDirectory list, gets its cols list, accesses the RID col (do not think those r the base pages tho)
-        #invalidating base record in the RID col to a special value, -1
-        #is it enough to update the RID col or do we need to go through the rest of the cols in that record?
-        position  = rid_base_col.find(rid)
-        slot = position[1]
-        rid_base_col.update(slot, -1)
-        #have to set tail records to -1 using indirection col but how can i access?
-        pass
-    
-    
+        #returns the page and slot of the base record
+        b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(rid)
+        b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
+
+        #setting the base RID to a special value, -1 (invalidating)
+        #self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, -1)
+        
+        #need to code if there are multiple updates in the tail pages
+        if indirection != 0:
+            t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(TAIL RID)
+            t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
+            self.table.tail_pd.pageDirectoryTail[0].connectedColumns[t_index].write(t_slot, -1)
+
+        pass 
+
+    #need to still need to remove from the index
+
     """
     # Insert a record with specified columns
     # Return True upon succesful insertion
@@ -56,8 +62,50 @@ class Query:
     # Returns False if record locked by TPL
     # Assume that select will never be called on a key that doesn't exist
     """
+    #need to change according to new page directory file
     def select(self, search_key, search_key_index, projected_columns_index):
-        pass
+        #may return multiple rids depending on search key 
+        rid = self.table.index.locate(search_key_index, search_key)
+        recordObjects = []
+        #returns all columns of the record
+        recordColumns = self.table.pageDirectory.findRow(rid)
+        positions = []
+        #loop over all the cols to find the page and slot of the record in each col
+        for i in recordColumns:
+            col_location = i.find(rid)
+            positions.append(col_location)
+            
+        #need a function to retrieve the latest indirection val - table.py
+
+        values = []
+        if indirection == 0:
+            for index, include in enumerate(projected_columns_index):
+                #returns values of chosen columns (using projected_columns_index)
+                if include == 1:
+                    page, slot = positions[index]
+                    value = page.get_value(slot) #need to implement a function that retrieves a value from a given slot
+                    values.append(value)   
+        else:
+            #returning the latest tail record
+            tail_cols = self.table.pageDirectory.findRow(indirection)
+            tail_positions = []
+            #returning the page and slot of each column associated with the tail page's RID
+            for i in tail_cols:
+                col_location = i.find(indirection)
+                tail_positions.append(col_location)
+                #returning the values of the chosen cols
+                for index, include in enumerate(projected_columns_index):
+                    if include == 1:
+                        page, slot = tail_positions[index]
+                        value = page.get_value(slot)
+                        values.append(value)
+    
+        #returning the values of the columns as Record objects - need to extract primary key
+        recordObjects.append(Record(rid = rid, key = PRIMARY_KEY, columns = values))
+        return recordObjects
+    
+        #STILL NEED TO RETURN FALSE IF RECORD LOCKED BY TPL
+
 
     
     """
@@ -92,7 +140,38 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum(self, start_range, end_range, aggregate_column_index):
-        pass
+        sum = 0
+        #returns a list of RIDs which are in the given range 
+        rid_list = self.index.locate_range(start_range, end_range, self.table.key)
+        #returns False if no record exists in the given range
+        if len(rid_list) == 0:
+            return False
+        
+        for i in rid_list:
+            #need to skip RIDs which are -1 (deleted)
+            if indirection == 0:
+                #returns the page and slot where the RID is stored in the base RID col (col 0)
+                b_page, b_slot = self.table.base_pd.pageDirectoryBase[0].find(i)
+                #returns which page index this RID was found in (can read from the same page index in the other cols)
+                b_index = self.table.base_pd.pageDirectoryBase[0].connectedColumns.index(b_page)
+                #reads the value stored at the same slot of the same page index in the aggregate_column
+                value = self.table.base_pd.pageDirectoryBase[aggregate_column_index].connectedColumns[b_index].read(b_slot) #need a read function
+                #adds this value to the sum
+                sum += value
+            else:
+                #need to understand how the indirection col points to the tail RID
+                t_rid = indirection
+                #index - rid - page directory - come to the record and see indirection has been updated - follow indirection for tail record
+                #rid - page directory - find exactly where that record is - go read it
+                #how to find rid to begin with? is the user is lookign for a particular record, they give you prmary key, look up index, and from index it tells you rid
+                #index to rid to page directory to base page to base record 
+                #after base record, read indirection, if not 0, follow indirection pointer to read tail record (indirection holds rid of tail record);
+                #could ask page directiory where this rid is - adress it returns is that of the tail record 
+                t_page, t_slot = self.table.tail_pd.pageDirectoryTail[0].find(t_rid)
+                t_index = self.table.tail_pd.pageDirectoryTail[0].connectedColumns.index(t_page)
+                value = self.table.tail_pd.pageDirectoryTail[aggregate_column_index].connectedColumns[t_index].read(t_slot)
+                sum += value
+        return sum
 
     
     """
