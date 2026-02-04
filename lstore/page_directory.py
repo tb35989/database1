@@ -54,7 +54,7 @@ class PageDirectory:
     # also checks to make sure the row all has the same slot #
     def write_base_record(self, rid, record, rid_col):
         slotNumbers = []
-        slotNumbers.append(self.pageDirectoryBase[0].write(rid))
+        slotNumbers.append(self.pageDirectoryBase[rid_col].write(rid))
         for i in range(len(record)):
             slotNumbers.append(self.pageDirectory[i + 1].write(record[i]))
         for i in range(len(slotNumbers) - 1):
