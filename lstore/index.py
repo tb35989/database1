@@ -55,8 +55,6 @@ class Index:
         self.indices[column_number] = None
         
     # functions that are helpful
-    def rid_key(self):
-        return hasattr(self.table, "key_to_rid") and isinstance(self.table.key_to_rid, dict)
 
         
     def rid_column(self):    #create iterator to see rid and columns   
@@ -76,3 +74,11 @@ class Index:
   
 
     #hashtbale for table.py
+    def key_rid(self, table, key):
+        if table is None:
+            return None
+        key_to_rid = getattr(table, "key_to_rid", None) # mapping key values  to RIDs.
+        if not isinstance(key_to_rid, dict): # If the mapping doesnt exist or isn't a dictionary, then return None.
+            return None
+        rid = key_to_rid.get(key)
+        return rid
