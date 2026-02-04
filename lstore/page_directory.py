@@ -57,7 +57,7 @@ class PageDirectory:
         slotNumbers.append(self.pageDirectoryBase[rid_col].write(rid))
         for i in range(len(record)):
             if i != rid_col:
-                slotNumbers.append(self.pageDirectory[i + 1].write(record[i]))
+                slotNumbers.append(self.pageDirectory[i].write(record[i]))
         for i in range(len(slotNumbers) - 1):
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
