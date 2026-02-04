@@ -17,7 +17,7 @@ class Page:
     # returns the location (slot/offset #) of the written in data
     def write(self, value):
         offset = self.num_records * 8
-        self.data[offset:offset+8] = value.to_bytes(8, byteorder='big')
+        self.data[offset:offset+8] = value.to_bytes(8, byteorder='big', signed = True)
         self.num_records += 1
         return self.num_records - 1
 
