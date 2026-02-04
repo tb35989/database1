@@ -52,11 +52,13 @@ class PageDirectory:
     # column is the first column in the table, and then writes the rest of the data (record)
     # into the next columns
     # also checks to make sure the row all has the same slot #
+    # (puts RID into the first column in the table)
     def write_base_record(self, rid, record, rid_col):
         slotNumbers = []
         slotNumbers.append(self.pageDirectoryBase[rid_col].write(rid))
         for i in range(len(record)):
-            slotNumbers.append(self.pageDirectory[i + 1].write(record[i]))
+            if i != rid_col:
+                slotNumbers.append(self.pageDirectory[i + 1].write(record[i]))
         for i in range(len(slotNumbers) - 1):
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
