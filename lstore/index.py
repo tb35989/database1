@@ -4,7 +4,7 @@ indexd by default, other columns can be indexed through this object. Indices are
 usually B-Trees, but other data structures can be used as well.
 """
 from table import Table 
-
+#need a function that retrieves primary key's index 
 class Index:
 
     def __init__(self, table):

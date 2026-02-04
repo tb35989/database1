@@ -113,3 +113,27 @@ user_columns = list/tuple of values to fill into user columns
         page_list = self.pageDirectoryTail[column]
         page = page_list.pages[rid_page_index]
         return page.read(slot)
+
+#WORK IN PROGRESS 
+    def get_version_rid(self, base_rid, relative_version):
+        b_page, b_slot = self.base_pd.pageDirectoryBase[1].find(base_rid)
+        b_index = self.base_pd.pageDirectoryBase[1].connectedColumns.index(b_page)
+    
+        indirection = self.base_pd.pageDirectoryBase[0].connectedColumns[b_index].read(b_slot)
+    
+        # If no tail updates, returns base RID
+        if indirection == 0:
+            return base_rid
+
+        # Loops through until it reaches the relative version
+        curr = indirection
+        for i in range(abs(relative_version)):
+            t_page, t_slot = self.tail_pd.pageDirectoryTail[1].find(curr)
+            previous_indirection = self.tail_pd.pageDirectoryTail[0].connectedColumns[0].read(t_slot)
+            if previous_indirection == 0:
+                return base_rid
+            curr = previous_indirection
+
+        return curr
+#also need to implement if schema encoding col is flagged, go back 1 version
+#if value is null at the specific version, keep going back until value exists 

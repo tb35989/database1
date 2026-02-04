@@ -5,6 +5,7 @@ class PageDirectory:
     # list of pages
     # contains a list of Base pages and a list of Tail pages. Both can perform the same 
     # functions, they are just kept differentiated.
+    #are these a matrix?
     def __init__(self):
         self.pageDirectoryBase = []
         self.pageDirectoryTail = []
