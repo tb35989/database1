@@ -33,6 +33,7 @@ class Table:
         self.total_cols = num_columns + 4
         self.base_pd = PageDirectory(self.total_cols)
         self.tail_pd = PageDirectory(self.total_cols)
+        self.page_range = PageRange(num_columns)
         # Initialize base and tail RIDs
         self.next_base_rid = 1
         self.next_tail_rid = 1

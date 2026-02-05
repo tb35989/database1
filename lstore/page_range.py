@@ -9,9 +9,9 @@ class PageRange:
     # contains a list of Base pages and a list of Tail pages. Both can perform the same 
     # functions, they are just kept differentiated.
     #are these a matrix?
-    def __init__(self):
-        self.pageRangeBase = []
-        self.pageRangeTail = []
+    def __init__(self, num_columns):
+        self.pageRangeBase = [PageList() for i in range(num_columns)]
+        self.pageRangeTail = [PageList() for i in range(num_columns)]
 
 
     # returns True if the rid is in the pageRange, false if not
