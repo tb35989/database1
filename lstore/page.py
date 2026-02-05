@@ -4,7 +4,6 @@ class Page:
         self.num_records = 0
         # creates 4kb of space (# rows basically) for the new page it's creating
         self.data = bytearray(4096)
-        self.pageRange = 0 # keeps track of the page range for each individual page (see page_list for more)
 
     def setPageRange(self, pageRange):
         self.pageRange = pageRange

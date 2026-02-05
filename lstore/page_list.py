@@ -18,7 +18,6 @@ class PageList:
         self.base = baseOrTail  # set to True if base page, False if not
         if self.base:
             self.counter = 0
-            self.pageRange = 1
 
     # return the current writeable column
     def writableColumn(self):
@@ -32,15 +31,23 @@ class PageList:
             return self.writeableColumn.write(value)
         else:
             newPage = Page()
-            if self.base:
-                # if a base page, set the page range for the new page
-                self.counter += 1
-                if self.counter == 17:
-                    self.pageRange += 1
-                    self.counter = 0
-                newPage.setPageRange(self.pageRange)
+            self.counter += 1
             self.connectedColumns.append(newPage)
             return newPage.write(value)
+
+    # given a page range, returns the pages in the PageList that correspond
+    # to that page range. For example, the first 16 pages
+    def getPageRange(self, pageRange):
+        range = pageRange - 1
+        if len(self.connectedColumns) < (range * 16 + 15):
+            # ex: if pageRange = 1 and there are 3 pages in the pagelist, return 
+            # ((1 - 1) * 16):the end of the list AKA return 0:2
+            return self.connectedColumns[(range * 16):]
+        else:
+            # ex: if pagerange = 1 and there are 17 pages in the pagelist, return
+            # ((1 - 1) * 16):((1 - 1) * 16 + 15)
+            # = return self.connectedColumns[0:15] aka the first 16 pages
+            return self.connectedColumns[(range * 16):(range * 16 + 15)]
 
     # returns a list where the first item is the page where the data is found
     # and the second item is the slot #/offset # where the data is found on that page
