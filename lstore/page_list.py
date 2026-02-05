@@ -16,6 +16,9 @@ class PageList:
         newPage = Page()
         self.connectedColumns.append(newPage)
         self.base = baseOrTail  # set to True if base page, False if not
+        if self.base:
+            self.counter = 0
+            self.pageRange = 1
 
     # return the current writeable column
     def writableColumn(self):
@@ -29,6 +32,12 @@ class PageList:
             return self.writeableColumn.write(value)
         else:
             newPage = Page()
+            if self.base:
+                self.counter += 1
+                if self.counter == 17:
+                    self.pageRange += 1
+                    self.counter = 0
+                newPage.setPageRange(self.pageRange)
             self.connectedColumns.append(newPage)
             return newPage.write(value)
 
