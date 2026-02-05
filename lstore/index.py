@@ -8,40 +8,48 @@ from table import Table
 class Index:
 
     def __init__(self, table):
-        #  One index for each table. All our empty initially.
-        # Each column has unique index 
-        # shoes None if a column is not indexed.
-        self.indices = [None] * table.num_columns
+        # One index slot per user column; all start empty.
         self.table = table
+        self.indices = [None] * table.num_columns
+        # Key column is indexed by default (empty index to start).
         if hasattr(table, "key") and table.key is not None:
-            self.create_index(table.key)
+            self.indices[table.key] = {}
 
     # returns the location of all records with the given value on column "column"
     def locate(self, column, value):
-        # if table.key_to_rid is present, faster lookup.
-        if self.rid_key() and column == self.table.key:
-            rid = self.table.key_to_rid.get(value)
+        # Fast path for primary key if key_to_rid exists.
+        key_map = getattr(self.table, "key_to_rid", None)
+        if isinstance(key_map, dict) and column == self.table.key:
+            rid = key_map.get(value)
             return [] if rid is None else [rid]
-       
-        index = self.indices[column]   # check if a index already exists
+
+        # Use a built index if one exists for this column.
+        index = self.indices[column]
         if index is not None:
             return list(index.get(value, []))
-     
-        pairs = []  # No index, do full scan
-        for rid, columns in self.rid_column():
-            if column < len(columns) and columns[column] == value:
-                pairs.append(rid)
-        return pairs
+        # No index available for this column.
+        return []
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     def locate_range(self, begin, end, column):
-        ind = self.indices[column]
-        pairs = []
+        # Fast path for primary key if key_to_rid exists.
+        key_map = getattr(self.table, "key_to_rid", None)
+        if isinstance(key_map, dict) and column == self.table.key:
+            rids = []
+            for key, rid in key_map.items():
+                if begin <= key <= end:
+                    rids.append(rid)
+            return rids
 
-
-
-
-
-      
+        # Use a built index if one exists for this column.
+        index = self.indices[column]
+        if index is not None:
+            rids = []
+            for key, value_rids in index.items():
+                if begin <= key <= end:
+                    rids.extend(value_rids)
+            return rids
+        # No index available for this column.
+        return []
 
     # optional: Create index on specific column
     def create_index(self, column_number):
