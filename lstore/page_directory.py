@@ -62,6 +62,9 @@ class PageDirectory:
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
         return "success"
+    
+
+    # given a RID value, return the corresponding data  (or page and slot)
         
 
         
@@ -89,3 +92,6 @@ class PageDirectory:
             return self.pageDirectoryTail[columnID]
         else:
             return "column ID invalid"
+        
+    
+    # given a RID value, return the corresponding data  (or page and slot)

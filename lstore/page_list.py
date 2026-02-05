@@ -6,6 +6,8 @@ class PageList:
 
     # need to update pagelist so it keeps track of sets of 16 base pages
     # (tail pages can be unlimited)
+    # given the primary key, should return the correct page range of base pages
+    # ask about in office hours
 
     # create the pagelist: a list of pages that together create a column. think of it 
     # like a vertical list of columns.
