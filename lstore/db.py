@@ -43,3 +43,10 @@ class Database():
             if table == name:
                 return table
         return None
+
+    # given an RID, return the correct table
+    def pageDirectory(self, RID):
+        for i in range(len(self.tables)):
+            if self.table[i].find(RID) == True:
+                return self.table[i]
+        return "RID not found"

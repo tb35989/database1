@@ -1,6 +1,9 @@
 from lstore.page_list import PageList
 
 class PageRange:
+
+    # ONE PAGERANGE PER TABLE
+
     # pagerange: a list of pagelists that make up a table. think of it like a horizontal
     # list of pages
     # contains a list of Base pages and a list of Tail pages. Both can perform the same 
@@ -9,6 +12,17 @@ class PageRange:
     def __init__(self):
         self.pageRangeBase = []
         self.pageRangeTail = []
+
+
+    # returns True if the rid is in the pageRange, false if not
+    def searchForRID(self, rid):
+        if self.pageRangeBase[0].find(rid) == "not found":
+            if self.pageRangeTail[0].find(rid) == "not found":
+                return False
+            else:
+                return True
+        else:
+            return True
 
 
     # BASE RECORDS

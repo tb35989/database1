@@ -196,3 +196,12 @@ user_columns = list/tuple of values to fill into user columns
 #also need to implement if schema encoding col is flagged, go back 1 version
 #if value is null at the specific version, keep going back until value exists 
 
+    # I think we need this function:
+    def find(self, RID):
+        if self.base_pd.searchForRID(RID) == True:
+            return True
+        else: 
+            if self.tail_pd.searchForRID(RID) == True:
+                return True
+            else:
+                return False

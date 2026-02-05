@@ -1,6 +1,8 @@
+# I think eventually we can get rid of this (this is the old page range class)
+
 from lstore.page import Page, BasePage, TailPage
 
-class PageRange:
+class PageTemp:
     def __init__(self, num_columns):
         self.base_pages = [BasePage(num_columns)]
         self.tail_pages = [TailPage(num_columns)]
