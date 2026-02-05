@@ -10,20 +10,6 @@ class PageRange:
         self.pageRangeBase = []
         self.pageRangeTail = []
 
-    # given an RID, returns the corresponding columns (not including the RID column), 
-    # unless the RID is not found.
-    # (assumes the first column in the table is RID)
-    # (searches both base and tail records)
-    def findPageLists(self, RID):
-        if self.pageRangeTail[0].find(RID) == "not found":
-            if self.pageRangeBase[0].find(RID) == "not found":
-                return "RID not found"
-            else:
-                return self.pageRangeBase[1:]
-        else: 
-            return self.pageRangeTail[1:]
-
-
 
     # BASE RECORDS
 
