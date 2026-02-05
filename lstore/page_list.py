@@ -3,12 +3,17 @@ from lstore.page import Page
 # Does everything the page directory needs to do, except linking RIDs to pages.
 
 class PageList:
+
+    # need to update pagelist so it keeps track of sets of 16 base pages
+    # (tail pages can be unlimited)
+
     # create the pagelist: a list of pages that together create a column. think of it 
     # like a vertical list of columns.
-    def __init__(self):
+    def __init__(self, baseOrTail):
         self.connectedColumns = []
         newPage = Page()
         self.connectedColumns.append(newPage)
+        self.base = baseOrTail  # set to True if base page, False if not
 
     # return the current writeable column
     def writableColumn(self):

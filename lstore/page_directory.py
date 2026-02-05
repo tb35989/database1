@@ -30,7 +30,7 @@ class PageDirectory:
     # adds the specified number of columns to the table. Doesn't write anything in though.
     def addColumnBase(self, numColumns):
         for i in range(numColumns):
-            newColumn = PageList()
+            newColumn = PageList(baseOrTail = True)
             self.pageDirectoryBase.append(newColumn)
 
     # writes specified data into the next available slot in the specified column
@@ -72,7 +72,7 @@ class PageDirectory:
     # adds the specified number of columns to the table. Doesn't write anything in though.
     def addColumnTail(self, numColumns):
         for i in range(numColumns):
-            newColumn = PageList()
+            newColumn = PageList(baseOrTail = False)
             self.pageDirectoryTail.append(newColumn)
 
     # writes specified data into the next available slot in the specified column
