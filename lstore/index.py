@@ -4,12 +4,10 @@ indexd by default, other columns can be indexed through this object. Indices are
 usually B-Trees, but other data structures can be used as well.
 """
 from table import Table 
-# need a function that retrieves primary key's index 
+#need a function that retrieves primary key's index 
 class Index:
-    """Manage per-column indices for a table (hash maps for now)."""
 
     def __init__(self, table):
-        """Initialize index slots and default primary-key index."""
         # One index slot per user column; all start empty.
         self.table = table
         self.indices = [None] * table.num_columns
@@ -19,7 +17,6 @@ class Index:
 
     # returns the location of all records with the given value on column "column"
     def locate(self, column, value):
-        """Return a list of RIDs matching `value` in `column`."""
         # Fast path for primary key if key_to_rid exists.
         key_map = getattr(self.table, "key_to_rid", None)
         if isinstance(key_map, dict) and column == self.table.key:
@@ -34,7 +31,6 @@ class Index:
         return []
     # Returns the RIDs of all records with values in column "column" between "begin" and "end"
     def locate_range(self, begin, end, column):
-        """Return RIDs whose column value lies within [begin, end]."""
         # Fast path for primary key if key_to_rid exists.
         key_map = getattr(self.table, "key_to_rid", None)
         if isinstance(key_map, dict) and column == self.table.key:
@@ -57,7 +53,6 @@ class Index:
 
     # optional: Create index on specific column
     def create_index(self, column_number):
-        """Create an index on the given column (stub)."""
         ind= {} 
         
 
@@ -65,14 +60,12 @@ class Index:
 
     # optional: Drop index of specific column
     def drop_index(self, column_number):
-        """Drop the index for a specific column."""
         self.indices[column_number] = None
         
     # functions that are helpful
 
         
     def rid_column(self):    #create iterator to see rid and columns   
-        """Yield `(rid, columns)` pairs for base pages."""
         base_pd = self.table.base_pd
         base_columns = len(base_pd.pageDirectoryBase)
         if base_columns == 0:
@@ -90,7 +83,6 @@ class Index:
 
     #hashtbale for table.py
     def key_rid(self, table, key):
-        """Lookup a RID by key value using the table's key map."""
         if table is None:
             return None
         key_to_rid = getattr(table, "key_to_rid", None) # mapping key values  to RIDs.
