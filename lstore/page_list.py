@@ -33,6 +33,7 @@ class PageList:
         else:
             newPage = Page()
             if self.base:
+                # if a base page, set the page range for the new page
                 self.counter += 1
                 if self.counter == 17:
                     self.pageRange += 1
