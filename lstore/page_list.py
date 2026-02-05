@@ -4,8 +4,6 @@ from lstore.page import Page
 
 class PageList:
 
-    # need to update pagelist so it keeps track of sets of 16 base pages
-    # (tail pages can be unlimited)
     # given the primary key, should return the correct page range of base pages
     # ask about in office hours
 
@@ -36,7 +34,8 @@ class PageList:
             return newPage.write(value)
 
     # given a page range, returns the pages in the PageList that correspond
-    # to that page range. For example, the first 16 pages
+    # to that page range. For example, 1 returns the first 16 pages, 2 
+    # returns the 17th - the 32nd pages
     def getPageRange(self, pageRange):
         range = pageRange - 1
         if len(self.connectedColumns) < (range * 16 + 15):
@@ -49,8 +48,9 @@ class PageList:
             # = return self.connectedColumns[0:15] aka the first 16 pages
             return self.connectedColumns[(range * 16):(range * 16 + 15)]
 
-    # returns a list where the first item is the page where the data is found
-    # and the second item is the slot #/offset # where the data is found on that page
+    # returns a list where the first item is the page where the data is found,
+    # the second item is the index of the page in the pagelist where the data is found,
+    # and the third item is the slot #/offset # where the data is found on that page
     # if the data is not found, returns "not found"
     def find(self, value):
         j = 0
@@ -60,8 +60,14 @@ class PageList:
                 j += 1
             else:
                 location.append(self.connectedColumns[j])
+                location.append(j)
                 location.append(self.connectedColumns[j].find(value))
                 return location
         return "not found"
 
+    # given the page #, returns the corresponding page. starts at 0, so 0 returns 
+    # the first page in the pagelist, 1 returns the second page, and so on. 
+    # should correspond with j from the find() function above
+    def getPage(self, index):
+        return self.connectedColumns[index]
     

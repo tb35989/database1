@@ -48,7 +48,7 @@ class PageDirectory:
         else:
             return "column ID invalid"
     
-    # (a work in progress) writes data into a new base record row. assumes the RID 
+    # writes data into a new base record row. assumes the RID 
     # column is the first column in the table, and then writes the rest of the data (record)
     # into the next columns
     # also checks to make sure the row all has the same slot #
@@ -62,10 +62,25 @@ class PageDirectory:
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
         return "success"
-    
 
-    # given a RID value, return the corresponding data  (or page and slot)
-        
+    # given an RID value, return the corresponding pages that contain the data,
+    # and the slot number that all the data is on (assumes all the data is at the same slot #)
+    # (assumes RID is the first column in the table) (includes RID's page as the first item)
+    # the first value in the list returned is the slot number, then comes the pages in order
+    # (this can be changed around if need be)
+    def getBaseRow(self, rid):
+        location = self.pageDirectoryBase[0].find(rid)
+        row = []
+        if location == "not found":
+            return "RID not found in this table"
+        else:
+            row.append(location[2]) # the slot # for all the data
+            j = location[1] # j = the index of the page the data is on in the pagelist
+            # so for example, if the data is on the second page of the RID column,
+            # j = 1 (since the first page would be 0)
+            # anyways,
+            for i in range(len(self.pageDirectoryBase)):
+                row.append(self.pageDirectoryBase[i].getPage(j))
 
         
 
@@ -94,4 +109,21 @@ class PageDirectory:
             return "column ID invalid"
         
     
-    # given a RID value, return the corresponding data  (or page and slot)
+    # given an RID value, return the corresponding pages that contain the data,
+    # and the slot number that all the data is on (assumes all the data is at the same slot #)
+    # (assumes RID is the first column in the table) (includes RID's page as the first item)
+    # the first value in the list returned is the slot number, then comes the pages in order
+    # (this can be changed around if need be)
+    def getTailRow(self, rid):
+        location = self.pageDirectoryTail[0].find(rid)
+        row = []
+        if location == "not found":
+            return "RID not found in this table"
+        else:
+            row.append(location[2]) # the slot # for all the data
+            j = location[1] # j = the index of the page the data is on in the pagelist
+            # so for example, if the data is on the second page of the RID column,
+            # j = 1 (since the first page would be 0)
+            # anyways,
+            for i in range(len(self.pageDirectoryTail)):
+                row.append(self.pageDirectoryTail[i].getPage(j))
