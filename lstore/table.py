@@ -31,8 +31,7 @@ class Table:
         self.merge_threshold_pages = 50  # The threshold to trigger a merge
         # Initialize page directories for new base and tail page lists 
         self.total_cols = num_columns + 4
-        self.base_pr = PageRange(self.total_cols)
-        self.tail_pr = PageRange(self.total_cols)
+        self.page_range = PageRange(self.total_cols)
         # Initialize base and tail RIDs
         self.next_base_rid = 1
         self.next_tail_rid = 1
@@ -112,14 +111,14 @@ user_columns = list/tuple of values to fill into user columns
         base_rid = self.new_base_rid() # Assign base rid to new record
         record = self.make_base_record(base_rid, user_columns) # Call on make_base_record to fill in columns
         
-        self.base_pr.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
+        self.page_range.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
 
         self.key_to_rid[key_val] = base_rid # Add key and assigned RID of new observation to key->RID map 
         return True # Indicates success of insert
 
 
     def read_base_value(self, base_rid, column):
-        row = self.base_pr.getBaseRow(base_rid) # Returns list with slot number at index 0 and page objects for corresponding cols
+        row = self.page_range.getBaseRow(base_rid) # Returns list with slot number at index 0 and page objects for corresponding cols
         if isinstance(row, str): # Check if RID was actually found in table
             return None
         slot = row[0]
@@ -127,7 +126,7 @@ user_columns = list/tuple of values to fill into user columns
         return page_for_col.read(slot)
 
     def read_tail_value(self, tail_rid, column): 
-        row = self.tail_pr.getTailRow(tail_rid)
+        row = self.page_range.getTailRow(tail_rid)
         if isinstance(row, str):
             return None
         slot = row[0]
@@ -146,7 +145,7 @@ user_columns = list/tuple of values to fill into user columns
         # Loops through until it reaches the relative version
         curr = indirection
         for i in range(abs(relative_version)):
-            previous_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN)
+            previous_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN) # Get previous indirection rid 
             if previous_indirection == -1:
                 return base_rid # Account for deleted tail
             if previous_indirection == base_rid: # If only one tail record, that tail will point to base
@@ -154,13 +153,3 @@ user_columns = list/tuple of values to fill into user columns
             curr = previous_indirection
 
         return curr
-
-    # I think we need this function: (i could be wrong tho we can talk about it)
-    def find(self, RID):
-        if self.base_pr.searchForRID(RID) == True:
-            return True
-        else: 
-            if self.tail_pr.searchForRID(RID) == True:
-                return True
-            else:
-                return False
