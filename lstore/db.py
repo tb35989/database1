@@ -45,7 +45,9 @@ class Database():
         return None
 
     # given an RID, return the correct table
-    def pageDirectory(self, RID):
+    # I actually don't know if we need this function, but it's here anyways
+    # if you guys think we don't need it, we can delete
+    def getTableFromRID(self, RID):
         for i in range(len(self.tables)):
             if self.table[i].find(RID) == True:
                 return self.table[i]

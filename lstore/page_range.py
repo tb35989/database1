@@ -8,7 +8,13 @@ class PageRange:
     # list of pages
     # contains a list of Base pages and a list of Tail pages. Both can perform the same 
     # functions, they are just kept differentiated.
-    #are these a matrix?
+    #are these a matrix? <- no, just lists
+
+    # note: i implemented page range, page list, and page directory slightly different
+    # than how i think you're supposed to. so it's kind of funky. there's essentially 
+    # one "PageRange" per table, and the actual range of 16 pages is kept track in page list. 
+    # if we had more time i would rewrite it to a way that makes more sense, but alas
+
     def __init__(self, num_columns):
         self.pageRangeBase = [PageList() for i in range(num_columns)]
         self.pageRangeTail = [PageList() for i in range(num_columns)]
@@ -62,6 +68,15 @@ class PageRange:
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
         return "success"
+
+    # note: the TA says page directory just needs to, given an RID, return the location
+    # of the actual data, and the TA says there's one page directory per table. So I think
+    # the way we've written it, this PageRange class is acting as the page directory as well. 
+    # I realized a different way we could have done it that probably would have made more sense
+    # and then we would have had a separate class for pageRange and pageDirectory each but...
+    # we didn't do it that way... the TA thinks it's okay
+
+    # so anyways, the function below does what the page directory is supposed to do. 
 
     # given an RID value, return the corresponding pages that contain the data,
     # and the slot number that all the data is on (assumes all the data is at the same slot #)
