@@ -1,6 +1,6 @@
 from lstore.index import Index
 from time import time
-from page_directory import PageDirectory
+from page_range import PageRange
 
 INDIRECTION_COLUMN = 0
 RID_COLUMN = 1
@@ -68,16 +68,26 @@ user_columns = list/tuple of values to fill into user columns
             record[4 + i] = val # Initialize index to ignore metadata cols (index 0-3)
         return record
 
-    def schema_mask(self, updated_cols): #TODO 
-        pass
+    def schema_mask(self, updated_cols): #Input is list with index of each column that is updated
+        mask = 0 # Initialize bitmask 
+        for i in updated_cols: # Iterate for every column that was updated
+            mask |= (1 << i) # Starting with ..0001, shift 1 left by number i (columns are ordered colk, ..., col1, col0)
+            # (1 << i ) returns integer represented by binary mask
+            # |= operator retains indicators for previously changed columns
+        return mask
 
     #CUMULATIVE UPDATE 
-    def make_tail_record(self,prev_rid,tail_rid,updated_cols): #Assumes input for updated_cols is a tuple with placeholders of "None" for columns without updates
+    def make_tail_record(self,base_rid, prev_rid, tail_rid, updated_cols): #Assumes input for updated_cols is a tuple with placeholders of "None" for columns without updates
         record = [0] * self.total_cols # Initializing record with list of 0s corresponding with number of cols
         record[INDIRECTION_COLUMN] = prev_rid #base_rid if first update, previous tail page if not
         record[RID_COLUMN] = tail_rid # Newly allocated tail_rid
         record[TIMESTAMP_COLUMN] = int(time()) 
-        record[SCHEMA_ENCODING_COLUMN] = #SCHEMA MASK
+        # Extract indices of columns where updates were made 
+        updated_indices = []
+        for i, v in enumerate(updated_cols):
+            if v is not None: # Account for columns with no updates
+                updated_indices.append(i)
+        record[SCHEMA_ENCODING_COLUMN] = self.schema_mask(updated_indices) # Pass list of indices into schema mask
         for i in range(self.num_columns):
             physical_col = 4 + i # Adjust column index for metadata columns
             if updated_cols[i] is not None: # If corresponding column has an update
@@ -86,7 +96,7 @@ user_columns = list/tuple of values to fill into user columns
                 if prev_rid == base_rid: # For first update
                     record[physical_col] = self.read_base_value(base_rid, physical_col)
                 else: # For later updates (previously existing tail pages)
-                    record[physical_col] = self.read_tail_value[tail_rid, physical_col]
+                    record[physical_col] = self.read_tail_value(prev_rid, physical_col)
         return record
 
 
@@ -104,80 +114,30 @@ user_columns = list/tuple of values to fill into user columns
         
         self.base_pr.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
 
-        self.key_to_rid[key] = base_rid # Add key and assigned RID of new observation to key->RID map 
+        self.key_to_rid[key_val] = base_rid # Add key and assigned RID of new observation to key->RID map 
         return True # Indicates success of insert
 
-'FOLLOWING IS DUPLICATE OF QUERY.PY UPDATE FOR EDITS'
-    def update(self,key,*updated_cols):
-        tail_rid = self.new_tail_rid() # Assign tail rid to new record
-        record = self.make_tail_record(tail_rid, updated_cols)
-        # Call on read_base_value or read_tail_value in order to check indirection column for if updates have already been made
-        # If its the first update, 
-        # Go into page directory / page list 
-        pass
-   
-    #UPDATE SCHEMA ENCODING COL AS WELL
-    def update(self, primary_key, *columns):
-        rid_list = self.table.index.locate(self.table.key, primary_key)
-        #returns False if no records exist with given key or if record has been deleted
-        if len(rid_list) == 0: 
-            return False
-        rid = rid_list[0]
-        if rid == -1:
-            return False
-        b_page, b_slot = self.table.base_pr.pageRangeBase[1].find(rid) # RETURNS PAGE OBJ, SLOT ?? 
-        b_index = self.table.base_pr.pageRangeBase[1].connectedColumns.index(b_page)
-        indirection = self.table.read_base_value(base_rid, INDIRECTION_COLUMN) # USE HELPER FUNCTION FOR INDIRECTION
-        if indirection == 0:
-            #create new tail RID
-            t_rid = self.new_tail_rid()
-            #NEED TO UPDATE THE COLS OF THE NEW TAIL RECORD (WITH METADATA AND USER DATA) - IN PROGRESS
-            record = self.make_tail_record(old_t_rid, new_t_rid, columns)
-            #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
-            #update base record's indirection column
-            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, t_rid)
-        else:
-            old_t_rid = indirection
-            new_t_rid = self.new_tail_rid()
-            #creating new tail record where its indirection points to the previous version
-            record = self.make_tail_record(old_t_rid, new_t_rid, columns) # have to update cols in table.py function
-            #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
-            #updating the base record so its indirection points to the latest tail record
-            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, new_t_rid)
-'END'
 
-    #Set up a function to access the actual value given a RID and column
-    #To be used for indirection setting (will specify column as INDIRECTION_COLUMN) 
-    def read_base_value(self,base_rid,column): # Return value stored within a physical slot in a page
-        rid_page_index, slot = self.pageRangeBase[RID_COLUMN].find(base_rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
-        page_list = self.pageRangeBase[column] # Locate page list for corresponding column 
-        page = page_list.pages[rid_page_index] # Use the specific index of the RID in correct page list to find value for that observation, at that column
-        return page.read(slot) # Return value stored at that specified slot
-
-'HELPER FOR IF FIND RETURNS PAGE INSTEAD OF PAGE INDEX'
     def read_base_value(self, base_rid, column):
-        page, slot = self.pageRangeBase[column].find(base_rid) 
-        return page.read(slot)
-#PAGE DIRECTORY IS A TABLE, when new PD made new table is made, can decide whether base or tail table,
+        row = self.base_pr.getBaseRow(base_rid) # Returns list with slot number at index 0 and page objects for corresponding cols
+        if isinstance(row, str): # Check if RID was actually found in table
+            return None
+        slot = row[0]
+        page_for_col = row[1+column] # Returns page for specified column 
+        return page_for_col.read(slot)
 
-'HELPER FOR IF FIND RETURNS PAGE INSTEAD OF PAGE INDEX'
-    def read_tail_value(self, tail_rid, column):
-        page, slot = self.pageRangeTail[column].find(tail_rid)
-        return page.read(slot)
+    def read_tail_value(self, tail_rid, column): 
+        row = self.tail_pr.getTailRow(tail_rid)
+        if isinstance(row, str):
+            return None
+        slot = row[0]
+        page_for_col = row[1+column]
+        return page_for_col.read(slot)
 
-    #Replicate above logic for tail pages
-    def read_tail_value(self,tail_rid,column):
-        rid_page_index, slot = self.pageRangeTail[RID_COLUMN].find(tail_rid)
-        page_list = self.pageRangeTail[column]
-        page = page_list.pages[rid_page_index]
-        return page.read(slot)
 
-#WORK IN PROGRESS 
     def get_version_rid(self, base_rid, relative_version):
-        b_page, b_slot = self.base_pd.pageDirectoryBase[1].find(base_rid)
-        b_index = self.base_pd.pageDirectoryBase[1].connectedColumns.index(b_page)
-    
-        indirection = self.base_pd.pageDirectoryBase[0].connectedColumns[b_index].read(b_slot)
+        # Use helper function to return rid at indirection col from base rid
+        indirection = self.read_base_value(base_rid, INDIRECTION_COLUMN)
     
         # If no tail updates, returns base RID
         if indirection == 0:
@@ -186,22 +146,21 @@ user_columns = list/tuple of values to fill into user columns
         # Loops through until it reaches the relative version
         curr = indirection
         for i in range(abs(relative_version)):
-            t_page, t_slot = self.tail_pd.pageDirectoryTail[1].find(curr)
-            previous_indirection = self.tail_pd.pageDirectoryTail[0].connectedColumns[0].read(t_slot)
-            if previous_indirection == 0:
+            previous_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN)
+            if previous_indirection == -1:
+                return base_rid # Account for deleted tail
+            if previous_indirection == base_rid: # If only one tail record, that tail will point to base
                 return base_rid
             curr = previous_indirection
 
         return curr
-#also need to implement if schema encoding col is flagged, go back 1 version
-#if value is null at the specific version, keep going back until value exists 
 
     # I think we need this function: (i could be wrong tho we can talk about it)
     def find(self, RID):
-        if self.base_pd.searchForRID(RID) == True:
+        if self.base_pr.searchForRID(RID) == True:
             return True
         else: 
-            if self.tail_pd.searchForRID(RID) == True:
+            if self.tail_pr.searchForRID(RID) == True:
                 return True
             else:
                 return False

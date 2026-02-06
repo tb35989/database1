@@ -128,15 +128,19 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    #UPDATE SCHEMA ENCODING COL AS WELL
+    
+        #UPDATE SCHEMA ENCODING COL AS WELL
     def update(self, primary_key, *columns):
-        rid = self.table.index.locate(self.table.key, primary_key)
+        rid_list = self.table.index.locate(self.table.key, primary_key)
         #returns False if no records exist with given key or if record has been deleted
-        if len(rid) == 0 or rid == -1:
+        if len(rid_list) == 0: 
             return False
-        b_page, b_slot = self.table.base_pd.pageDirectoryBase[1].find(rid)
-        b_index = self.table.base_pd.pageDirectoryBase[1].connectedColumns.index(b_page)
-        indirection = self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].read(b_slot)
+        rid = rid_list[0]
+        if rid == -1:
+            return False
+        b_page, b_slot = self.table.base_pr.pageRangeBase[1].find(rid) # RETURNS PAGE OBJ, SLOT ?? 
+        b_index = self.table.base_pr.pageRangeBase[1].connectedColumns.index(b_page)
+        indirection = self.table.read_base_value(base_rid, INDIRECTION_COLUMN) # USE HELPER FUNCTION FOR INDIRECTION
         if indirection == 0:
             #create new tail RID
             t_rid = self.new_tail_rid()
@@ -144,7 +148,7 @@ class Query:
             record = self.make_tail_record(old_t_rid, new_t_rid, columns)
             #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
             #update base record's indirection column
-            self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, t_rid)
+            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, t_rid)
         else:
             old_t_rid = indirection
             new_t_rid = self.new_tail_rid()
@@ -152,9 +156,7 @@ class Query:
             record = self.make_tail_record(old_t_rid, new_t_rid, columns) # have to update cols in table.py function
             #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
             #updating the base record so its indirection points to the latest tail record
-            self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, new_t_rid)
-
-    
+            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, new_t_rid)
 
     
     """
