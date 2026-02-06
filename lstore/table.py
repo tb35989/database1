@@ -31,9 +31,8 @@ class Table:
         self.merge_threshold_pages = 50  # The threshold to trigger a merge
         # Initialize page directories for new base and tail page lists 
         self.total_cols = num_columns + 4
-        self.base_pd = PageDirectory(self.total_cols)
-        self.tail_pd = PageDirectory(self.total_cols)
-        self.page_range = PageRange(num_columns)
+        self.base_pr = PageRange(self.total_cols)
+        self.tail_pr = PageRange(self.total_cols)
         # Initialize base and tail RIDs
         self.next_base_rid = 1
         self.next_tail_rid = 1
@@ -103,8 +102,7 @@ user_columns = list/tuple of values to fill into user columns
         base_rid = self.new_base_rid() # Assign base rid to new record
         record = self.make_base_record(base_rid, user_columns) # Call on make_base_record to fill in columns
         
-        # REQUIRES CHANGES TO PAGE_DIRECTORY.PY - need method to write_base_record
-        self.base_pd.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
+        self.base_pr.write_base_record(rid=base_rid, record=record, rid_col=RID_COLUMN)
 
         self.key_to_rid[key] = base_rid # Add key and assigned RID of new observation to key->RID map 
         return True # Indicates success of insert
@@ -127,8 +125,8 @@ user_columns = list/tuple of values to fill into user columns
         rid = rid_list[0]
         if rid == -1:
             return False
-        b_page, b_slot = self.table.base_pd.pageDirectoryBase[1].find(rid) # RETURNS PAGE OBJ, SLOT ?? 
-        b_index = self.table.base_pd.pageDirectoryBase[1].connectedColumns.index(b_page)
+        b_page, b_slot = self.table.base_pr.pageRangeBase[1].find(rid) # RETURNS PAGE OBJ, SLOT ?? 
+        b_index = self.table.base_pr.pageRangeBase[1].connectedColumns.index(b_page)
         indirection = self.table.read_base_value(base_rid, INDIRECTION_COLUMN) # USE HELPER FUNCTION FOR INDIRECTION
         if indirection == 0:
             #create new tail RID
@@ -137,7 +135,7 @@ user_columns = list/tuple of values to fill into user columns
             record = self.make_tail_record(old_t_rid, new_t_rid, columns)
             #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
             #update base record's indirection column
-            self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, t_rid)
+            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, t_rid)
         else:
             old_t_rid = indirection
             new_t_rid = self.new_tail_rid()
@@ -145,31 +143,32 @@ user_columns = list/tuple of values to fill into user columns
             record = self.make_tail_record(old_t_rid, new_t_rid, columns) # have to update cols in table.py function
             #NEED TO WRITE THE TAIL RECORD TO THE TAIL PAGE DATA STRUCTURE 
             #updating the base record so its indirection points to the latest tail record
-            self.table.base_pd.pageDirectoryBase[0].connectedColumns[b_index].write(b_slot, new_t_rid)
+            self.table.base_pr.pageRangeBase[0].connectedColumns[b_index].write(b_slot, new_t_rid)
 'END'
 
     #Set up a function to access the actual value given a RID and column
     #To be used for indirection setting (will specify column as INDIRECTION_COLUMN) 
     def read_base_value(self,base_rid,column): # Return value stored within a physical slot in a page
-        rid_page_index, slot = self.pageDirectoryBase[RID_COLUMN].find(base_rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
-        page_list = self.pageDirectoryBase[column] # Locate page list for corresponding column 
+        rid_page_index, slot = self.pageRangeBase[RID_COLUMN].find(base_rid) # Use "find" function within page_list.py to locate slot for rid, returns page id and slot on that page
+        page_list = self.pageRangeBase[column] # Locate page list for corresponding column 
         page = page_list.pages[rid_page_index] # Use the specific index of the RID in correct page list to find value for that observation, at that column
         return page.read(slot) # Return value stored at that specified slot
 
 'HELPER FOR IF FIND RETURNS PAGE INSTEAD OF PAGE INDEX'
     def read_base_value(self, base_rid, column):
-        page, slot = self.pageDirectoryBase[column].find(base_rid)
+        page, slot = self.pageRangeBase[column].find(base_rid) 
         return page.read(slot)
+#PAGE DIRECTORY IS A TABLE, when new PD made new table is made, can decide whether base or tail table,
 
 'HELPER FOR IF FIND RETURNS PAGE INSTEAD OF PAGE INDEX'
     def read_tail_value(self, tail_rid, column):
-        page, slot = self.pageDirectoryTail[column].find(tail_rid)
+        page, slot = self.pageRangeTail[column].find(tail_rid)
         return page.read(slot)
-        
+
     #Replicate above logic for tail pages
     def read_tail_value(self,tail_rid,column):
-        rid_page_index, slot = self.pageDirectoryTail[RID_COLUMN].find(tail_rid)
-        page_list = self.pageDirectoryTail[column]
+        rid_page_index, slot = self.pageRangeTail[RID_COLUMN].find(tail_rid)
+        page_list = self.pageRangeTail[column]
         page = page_list.pages[rid_page_index]
         return page.read(slot)
 
