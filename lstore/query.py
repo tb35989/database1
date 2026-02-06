@@ -128,7 +128,6 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
-    
         #UPDATE SCHEMA ENCODING COL AS WELL
     def update(self, primary_key, *columns):
         rid_list = self.table.index.locate(self.table.key, primary_key)
