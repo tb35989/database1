@@ -23,6 +23,9 @@ class Page:
         self.data[offset:offset+8] = value.to_bytes(8, byteorder='big', signed = True)
         self.num_records += 1
         return self.num_records - 1
+    
+    def writeAtSlot(self, value, slot):
+        self.data[slot:slot+8] = value.to_bytes(8, byteorder='big', signed = True)
 
     def find(self, value):
         # return the slot #/offset # for the given data (needs to be coded)
