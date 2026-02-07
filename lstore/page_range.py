@@ -122,9 +122,11 @@ class PageRange:
     # the first value in the list returned is the slot number, then comes the pages in order
     # (this can be changed around if need be)
     def getTailRow(self, rid):
+        print("GET TAIL ROW CALLED", rid)
         location = self.pageRangeTail[0].find(rid)
         row = []
         if location == "not found":
+            print("RID NOT FOUND")
             return "RID not found in this table"
         else:
             row.append(location[2]) # the slot # for all the data
