@@ -88,6 +88,7 @@ class PageRange:
             # anyways,
             for i in range(len(self.pageRangeBase)):
                 row.append(self.pageRangeBase[i].getPage(j))
+            return row
 
         
 
