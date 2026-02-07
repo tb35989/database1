@@ -12,15 +12,15 @@ class Index:
     # - a dict mapping column values -> list of RIDs.
 
     def __init__(self, table):
-        # One index slot per user column; all start empty.
+        # One index (empty dict) per user column.
         self.table = table
-        self.indices = [None] * table.num_columns
-        # Key column is indexed by default (empty index to start).
-        if hasattr(table, "key") and table.key is not None:
-            self.indices[table.key] = {}
+        self.indices = [{} for _ in range(table.num_columns)]
 
     # returns the location of all records with the given value on column "column"
     def locate(self, column, value):
+        if column < 0 or column >= len(self.indices):
+            return []
+
         # Fast path for primary key if key_to_rid exists.
         key_map = getattr(self.table, "key_to_rid", None)
         if isinstance(key_map, dict) and column == self.table.key:
@@ -30,8 +30,22 @@ class Index:
 
         # Use a built index if one exists for this column.
         index = self.indices[column]
-        if index is not None:
+        if isinstance(index, dict):
             # Non-key columns can map one value to multiple matching rows.
+            if value in index:
+                return list(index.get(value, []))
+
+            # Lazy build for this column from current base records.
+            # This keeps future lookups fast for the same column.
+            read_base_value = getattr(self.table, "read_base_value", None)
+            if isinstance(key_map, dict) and callable(read_base_value):
+                physical_column = column + 4
+                index.clear()
+                for rid in key_map.values():
+                    column_value = read_base_value(rid, physical_column)
+                    if column_value is None:
+                        continue
+                    index.setdefault(column_value, []).append(rid)
             return list(index.get(value, []))
         # No index available for this column.
         return []

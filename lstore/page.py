@@ -43,6 +43,11 @@ class Page:
         return self.num_records * 8
     
 
+    def read(self, slot):
+        if slot < 0 or slot >= self.num_records: # Check if inputted slot is valid (exists on page)
+            return None
+        return self.data[slot] # Return value at that slot
+
 '''class BasePage:
     def __init__(self, num_cols):
         self.rid = Page()

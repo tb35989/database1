@@ -117,6 +117,22 @@ class PageRange:
             return "column ID invalid"
         
     
+    # writes data into a new tail record row. assumes the RID 
+    # column is the first column in the table, and then writes the rest of the data (record)
+    # into the next columns
+    # also checks to make sure the row all has the same slot #
+    def write_tail_record(self, rid, record, rid_col):
+        slotNumbers = []
+        slotNumbers.append(self.pageRangeTail[rid_col].write(rid))
+        for i in range(len(record)):
+            if i != rid_col:
+                slotNumbers.append(self.pageRangeTail[i].write(record[i]))
+        for i in range(len(slotNumbers) - 1):
+            if slotNumbers[0] != slotNumbers[i + 1]:
+                return "error"
+        return "success"
+        
+    
     # given an RID value, return the corresponding pages that contain the data,
     # and the slot number that all the data is on (assumes all the data is at the same slot #)
     # (assumes RID is the first column in the table) (includes RID's page as the first item)
