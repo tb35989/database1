@@ -36,7 +36,6 @@ class Table:
         # Initialize base and tail RIDs
         self.next_base_rid = 1
         self.next_tail_rid = 1
-        pass
 
     def __merge(self):
         print("merge is happening")
@@ -148,7 +147,7 @@ class Table:
         if isinstance(base_row, str): # Check that rid exists (error message would return)
             return False
 
-        latest = self.read_base_value(base_rid, INDIRECTION_COLUMN) # Collect latest tail rid for chain traversal
+        latest = base_row[1 + INDIRECTION_COLUMN].read(slot) # Collect latest tail rid for chain traversal
         slot = base_row[0] # Locate slot for given record
         base_row[1 + RID_COLUMN].writeAtSlot(-1, slot) # Invalidate base RID
         base_row[1 + INDIRECTION_COLUMN].writeAtSlot(-1, slot) # Invalidate base indirection
@@ -173,8 +172,9 @@ class Table:
         curr = indirection
         for i in range(abs(relative_version)):
             previous_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN) # Get previous indirection rid 
-            if previous_indirection in (-1, 0, base_rid):
+            if previous_indirection in (-1, 0, base_rid, None):
                 # Account for deleted tails or only one tail 
                 return base_rid # Account for deleted tail
+            curr = previous_indirection
 
         return curr
