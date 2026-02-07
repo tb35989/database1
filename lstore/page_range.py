@@ -69,20 +69,12 @@ class PageRange:
                 return "error"
         return "success"
 
-    # note: the TA says page directory just needs to, given an RID, return the location
-    # of the actual data, and the TA says there's one page directory per table. So I think
-    # the way we've written it, this PageRange class is acting as the page directory as well. 
-    # I realized a different way we could have done it that probably would have made more sense
-    # and then we would have had a separate class for pageRange and pageDirectory each but...
-    # we didn't do it that way... the TA thinks it's okay
-
-    # so anyways, the function below does what the page directory is supposed to do. 
+    # note: the function below basically performs what the "page directory" is supposed to do.
 
     # given an RID value, return the corresponding pages that contain the data,
     # and the slot number that all the data is on (assumes all the data is at the same slot #)
     # (assumes RID is the first column in the table) (includes RID's page as the first item)
     # the first value in the list returned is the slot number, then comes the pages in order
-    # (this can be changed around if need be)
     def getBaseRow(self, rid):
         location = self.pageRangeBase[0].find(rid)
         row = []
