@@ -32,7 +32,7 @@ class Page:
     def next_offset(self):
         return self.num_records * 8
 
-class BasePage:
+'''class BasePage:
     def __init__(self, num_cols):
         self.rid = Page()
         self.indirection = Page()
@@ -68,4 +68,4 @@ class TailPage:
         self.time.write(record[2])
         self.schema_encoding.write(record[3])
         for i in range(4, len(record)):
-            self.pages[i-4].write(record[i])
+            self.pages[i-4].write(record[i])'''
