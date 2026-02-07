@@ -14,7 +14,7 @@ class PageList:
         if self.base:
             self.counter = 0
 
-    # return the current writeable column
+    # return the current writeable page
     def writeableColumn(self):
         return self.connectedColumns[-1]
 
@@ -22,7 +22,7 @@ class PageList:
     # add a new page to the pagelist
     # also, returns the location (slot #/offset #) of the new data
     def write(self, value):
-        if self.writeableColumn.has_capacity() > 0:
+        if self.writeableColumn().has_capacity() > 0:
             return self.writeableColumn.write(value)
         else:
             newPage = Page()
