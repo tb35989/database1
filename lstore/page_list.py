@@ -26,7 +26,8 @@ class PageList:
             return self.writeableColumn().write(value)
         else:
             newPage = Page()
-            self.counter += 1
+            if self.baseorTail:
+                self.counter += 1
             self.connectedColumns.append(newPage)
             return newPage.write(value)
 
