@@ -127,8 +127,6 @@ class Table:
 
     def read_tail_value(self, tail_rid, column): 
         row = self.page_range.getTailRow(tail_rid)
-        if row == "not found":
-            return None
         if isinstance(row, str):
             return None
         slot = row[0]

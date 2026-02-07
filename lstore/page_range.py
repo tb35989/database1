@@ -134,3 +134,4 @@ class PageRange:
             # anyways,
             for i in range(len(self.pageRangeTail)):
                 row.append(self.pageRangeTail[i].getPage(j))
+            return row
