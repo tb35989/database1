@@ -134,14 +134,32 @@ class Table:
         page_for_col = row[1+column]
         return page_for_col.read(slot)
 
-    def invalidate_base(self, base_rid): 
-        row = self.page_range.getBaseRow(base_rid)
-        if isinstance(row, str): # Account for if base_rid does not exist in table (will return error message as string)
-            return False 
-        slot = row[0] # Set slot as value in index 1 of returned base row
-        rid_page = row[1 + RID_COLUMN] # Pull indirection page from returned list
-        rid_page.writeAtSlot(-1, slot)
-        return True # Indicate successful deletion / invalidation of base record 
+    def invalidate_tail_rid(self, tail_rid):
+        row = self.page_range.getTailRow(tail_rid) # Get tail record
+        if isinstance(row, str): # Check that rid exists
+            return False
+        slot = row[0] # Locate slot for given record
+        rid_page = row[1 + RID_COLUMN] # Go to correct slot and page number
+        rid_page.writeAtSlot(-1, slot) # Invalidate
+        return True
+    
+    def rid_invalidation(self, base_rid):
+        base_row = self.page_range.getBaseRow(base_rid) # Get row for record to invalidate
+        if isinstance(base_row, str): # Check that rid exists (error message would return)
+            return False
+
+        latest = self.read_base_value(base_rid, INDIRECTION_COLUMN) # Collect latest tail rid for chain traversal
+        slot = base_row[0] # Locate slot for given record
+        base_row[1 + RID_COLUMN].writeAtSlot(-1, slot) # Invalidate base RID
+        base_row[1 + INDIRECTION_COLUMN].writeAtSlot(-1, slot) # Invalidate base indirection
+        
+        curr = latest        
+        while curr not in (0, -1, base_rid, None): # Follow indirection chain to all tail rids
+            self.invalidate_tail_rid(curr) # Use helper function to set tail rid to -1
+            curr = self.read_tail_value(curr, INDIRECTION_COLUMN) # Update current tail rid
+
+        return True
+        
 
     def get_version_rid(self, base_rid, relative_version):
         # Use helper function to return rid at indirection col from base rid
