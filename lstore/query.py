@@ -15,7 +15,6 @@ class Query:
         self.table = table
         pass
 
-    
     """
     # internal Method
     # Read a record with specified RID
@@ -23,7 +22,8 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
-        self.table.rid_invalidation(base_rid)
+        rid = self.table.index.locate(self.table.key, primary_key)
+        self.table.rid_invalidation(rid)
         #remove rid key from index 
 
     """
@@ -100,9 +100,7 @@ class Query:
             return False
         if all(rid == -1 for rid in rid_list):
             return False  
-
         recordObjects = []
-
         for i in rid_list:
             #skips over deleted records 
             if i == -1:
@@ -138,28 +136,22 @@ class Query:
         #returns False if rid does not exist or is deleted  
         if rid == -1:
             return False 
-        
         indirection = self.table.read_base_value(rid, 1)
         if indirection == 0:
             prev_rid = rid
         else:
             prev_rid = indirection 
-
         tail_rid = self.table.new_tail_rid()
         tail_record = self.table.make_tail_record(base_rid=rid, prev_rid=prev_rid, tail_rid=tail_rid, updated_cols=columns) 
         #need to make 
         self.table.page_range.write_tail_record(rid=tail_rid, record=tail_record, rid_col=0)
-
         #updating base record indirection to point to newest tail
         base_row = self.table.page_range.getBaseRow(rid)
         slot = base_row[0]
         indirection_page = base_row[2] #1 + indirection col
         indirection_page.writeAtSlot(tail_rid, slot)
-
         return True
-
-
-    
+   
     """
     :param start_range: int         # Start of the key range to aggregate 
     :param end_range: int           # End of the key range to aggregate 
