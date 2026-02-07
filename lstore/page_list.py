@@ -23,7 +23,7 @@ class PageList:
     # also, returns the location (slot #/offset #) of the new data
     def write(self, value):
         if self.writeableColumn().has_capacity() > 0:
-            return self.writeableColumn.write(value)
+            return self.writeableColumn().write(value)
         else:
             newPage = Page()
             self.counter += 1
