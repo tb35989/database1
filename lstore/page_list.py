@@ -15,7 +15,7 @@ class PageList:
             self.counter = 0
 
     # return the current writeable column
-    def writableColumn(self):
+    def writeableColumn(self):
         return self.connectedColumns[-1]
 
     # write data into the correct writeable column. if the column is full,
