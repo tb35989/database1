@@ -52,11 +52,11 @@ class Table:
         tail_rid = self.next_tail_rid
         self.next_tail_rid += 1
         return tail_rid
-'''
-num_columns = number of user columns
-total_cols = number of physical columns (including metadata cols)
-user_columns = list/tuple of values to fill into user columns
-'''
+    '''
+    num_columns = number of user columns
+    total_cols = number of physical columns (including metadata cols)
+    user_columns = list/tuple of values to fill into user columns
+    '''
     def make_base_record(self,base_rid,user_columns):
         record = [0] * self.total_cols # Generate list of 0s with correct number of columns 
         # INDIRECTION_COLUMN and SCHEMA_ENCODING_COLUMN initialized to 0
