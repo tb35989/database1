@@ -134,25 +134,29 @@ class Table:
         page_for_col = row[1+column]
         return page_for_col.read(slot)
 
-    def invalidate_base_rid(self, base_rid): 
-        pass 
+    def invalidate_base(self, base_rid): 
+        row = self.page_range.getBaseRow(base_rid)
+        if isinstance(row, str): # Account for if base_rid does not exist in table (will return error message as string)
+            return False 
+        slot = row[0] # Set slot as value in index 1 of returned base row
+        rid_page = row[1 + RID_COLUMN] # Pull indirection page from returned list
+        rid_page.writeAtSlot(-1, slot)
+        return True # Indicate successful deletion / invalidation of base record 
 
     def get_version_rid(self, base_rid, relative_version):
         # Use helper function to return rid at indirection col from base rid
         indirection = self.read_base_value(base_rid, INDIRECTION_COLUMN)
     
         # If no tail updates, returns base RID
-        if indirection == 0:
+        if indirection == 0 or indirection == -1:
             return base_rid
 
         # Loops through until it reaches the relative version
         curr = indirection
         for i in range(abs(relative_version)):
             previous_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN) # Get previous indirection rid 
-            if previous_indirection == -1:
+            if previous_indirection in (-1, 0, base_rid):
+                # Account for deleted tails or only one tail 
                 return base_rid # Account for deleted tail
-            if previous_indirection == base_rid: # If only one tail record, that tail will point to base
-                return base_rid
-            curr = previous_indirection
 
         return curr
