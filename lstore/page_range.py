@@ -16,8 +16,8 @@ class PageRange:
     # if we had more time i would rewrite it to a way that makes more sense, but alas
 
     def __init__(self, num_columns):
-        self.pageRangeBase = [PageList() for i in range(num_columns)]
-        self.pageRangeTail = [PageList() for i in range(num_columns)]
+        self.pageRangeBase = [PageList(True) for i in range(num_columns)]
+        self.pageRangeTail = [PageList(False) for i in range(num_columns)]
 
 
     # returns True if the rid is in the pageRange, false if not
