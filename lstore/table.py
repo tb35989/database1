@@ -127,7 +127,7 @@ class Table:
 
     def read_tail_value(self, tail_rid, column): 
         row = self.page_range.getTailRow(tail_rid)
-        if row is None:
+        if row == "not found":
             return None
         if isinstance(row, str):
             return None
