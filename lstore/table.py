@@ -2,8 +2,9 @@ from lstore.index import Index
 from time import time
 from page_range import PageRange
 
-INDIRECTION_COLUMN = 0
-RID_COLUMN = 1
+# CHANGE RID TO COLUMN 0 
+RID_COLUMN = 0
+INDIRECTION_COLUMN = 1
 TIMESTAMP_COLUMN = 2
 SCHEMA_ENCODING_COLUMN = 3
 
@@ -133,6 +134,8 @@ class Table:
         page_for_col = row[1+column]
         return page_for_col.read(slot)
 
+    def invalidate_base_rid(self, base_rid): 
+        pass 
 
     def get_version_rid(self, base_rid, relative_version):
         # Use helper function to return rid at indirection col from base rid
