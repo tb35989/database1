@@ -132,10 +132,11 @@ class Query:
     """
     def update(self, primary_key, *columns):
         #locates rid based on primary key
-        rid = self.table.index.locate(self.table.key, primary_key)
+        rid_list = self.table.index.locate(self.table.key, primary_key)
         #returns False if rid does not exist or is deleted  
-        if rid == -1:
+        if len(rid_list) == 0:
             return False 
+        rid = rid_list[0]
         indirection = self.table.read_base_value(rid, 1)
         if indirection == 0:
             prev_rid = rid
