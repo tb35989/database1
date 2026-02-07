@@ -1,6 +1,6 @@
 from lstore.index import Index
 from time import time
-from page_range import PageRange
+from lstore.page_range import PageRange
 
 # CHANGE RID TO COLUMN 0 
 RID_COLUMN = 0
