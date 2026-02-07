@@ -4,12 +4,6 @@ from lstore.page import Page
 
 class PageList:
 
-    # given the primary key, should return the correct page range of base pages
-    # ask about in office hours
-    # index maps primary keys to the RID
-    # from the primary key you need to be able to get the whole column
-    # should be in index, not pagedirectory
-
     # create the pagelist: a list of pages that together create a column. think of it 
     # like a vertical list of columns.
     def __init__(self, baseOrTail):
