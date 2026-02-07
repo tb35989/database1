@@ -126,6 +126,7 @@ class Table:
         return page_for_col.read(slot)
 
     def read_tail_value(self, tail_rid, column): 
+        print("HERE")
         row = self.page_range.getTailRow(tail_rid)
         if isinstance(row, str):
             return None
