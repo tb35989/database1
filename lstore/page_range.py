@@ -142,7 +142,7 @@ class PageRange:
         location = self.pageRangeTail[0].find(rid)
         row = []
         if location == "not found":
-            print("RID NOT FOUND")
+            return "RID not found in this table"
         else:
             row.append(location[2]) # the slot # for all the data
             j = location[1] # j = the index of the page the data is on in the pagelist
