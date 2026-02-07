@@ -88,6 +88,7 @@ class PageRange:
             # anyways,
             for i in range(len(self.pageRangeBase)):
                 row.append(self.pageRangeBase[i].getPage(j))
+            return row
 
         
 
@@ -125,7 +126,7 @@ class PageRange:
         location = self.pageRangeTail[0].find(rid)
         row = []
         if location == "not found":
-            return "RID not found in this table"
+            print("RID NOT FOUND")
         else:
             row.append(location[2]) # the slot # for all the data
             j = location[1] # j = the index of the page the data is on in the pagelist
@@ -134,3 +135,4 @@ class PageRange:
             # anyways,
             for i in range(len(self.pageRangeTail)):
                 row.append(self.pageRangeTail[i].getPage(j))
+            return row
