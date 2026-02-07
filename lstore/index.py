@@ -3,7 +3,7 @@ A data strucutre holding indices for various columns of a table. Key column shou
 indexd by default, other columns can be indexed through this object. Indices are
 usually B-Trees, but other data structures can be used as well.
 """
-from lstore.table import Table 
+# from lstore.table import Table    <- i don't think we need this
 #need a function that retrieves primary key's index 
 class Index:
     # Keeps per-column in-memory indices for a table.
