@@ -29,12 +29,19 @@ class Page:
         self.data[offset:offset+8] = value.to_bytes(8, byteorder='big', signed = True)
 
     def find(self, value):
+        for slot in range(self.num_records):
+            start = slot * 8
+            end = start + 8
+        if int.from_bytes(self.data[start:end], 'big', signed=True) == value:
+            return slot
+        return "not found"
+
         # return the slot #/offset # for the given data (needs to be coded)
         # if the data is not found, return "not found"
-        pass
 
     def next_offset(self):
         return self.num_records * 8
+    
 
 '''class BasePage:
     def __init__(self, num_cols):
