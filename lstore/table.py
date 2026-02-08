@@ -146,9 +146,9 @@ class Table:
         base_row = self.page_range.getBaseRow(base_rid) # Get row for record to invalidate
         if isinstance(base_row, str): # Check that rid exists (error message would return)
             return False
-
-        latest = base_row[1 + INDIRECTION_COLUMN].read(slot) # Collect latest tail rid for chain traversal
+        
         slot = base_row[0] # Locate slot for given record
+        latest = base_row[1 + INDIRECTION_COLUMN].read(slot) # Collect latest tail rid for chain traversal
         base_row[1 + RID_COLUMN].writeAtSlot(-1, slot) # Invalidate base RID
         base_row[1 + INDIRECTION_COLUMN].writeAtSlot(-1, slot) # Invalidate base indirection
         
