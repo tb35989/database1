@@ -123,10 +123,15 @@ class PageRange:
     # also checks to make sure the row all has the same slot #
     def write_tail_record(self, rid, record, rid_col):
         slotNumbers = []
-        slotNumbers.append(self.pageRangeTail[rid_col].write(rid))
+        base_slot = self.pageRangeTail[rid_col].write(rid)
+        slotNumbers.append(base_slot)
         for i in range(len(record)):
-            if i != rid_col:
+            if i == rid_col:
+                continue
+            if record[i] is not None:
                 slotNumbers.append(self.pageRangeTail[i].write(record[i]))
+            else:
+                slotNumbers.append(base_slot)  # keep slot alignment
         for i in range(len(slotNumbers) - 1):
             if slotNumbers[0] != slotNumbers[i + 1]:
                 return "error"
