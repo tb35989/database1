@@ -176,13 +176,11 @@ class Query:
         if len(rid_list) == 0:
             return False
         #if all RIDs are -1 (indication that they are all deleted)
-        if self.table.read_base_value(i, RID_COLUMN) == -1:
-            continue
         for i in rid_list:
-            #skips RIDS which are -1 (indication that these records are deleted)
-            if i == -1:
+            if self.table.read_base_value(i, 0) == -1:
                 continue
-                #checks the indirection, retrieves the latest value from either the base or tail record, sums over
+            #skips RIDS which are -1 (indication that these records are deleted)
+            #checks the indirection, retrieves the latest value from either the base or tail record, sums over
             indirection = self.table.read_base_value(i, 1)
             if indirection == 0:
                 value = self.table.read_base_value(i, location)
