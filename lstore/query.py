@@ -22,9 +22,19 @@ class Query:
     # Return False if record doesn't exist or is locked due to 2PL
     """
     def delete(self, primary_key):
-        rid = self.table.index.locate(self.table.key, primary_key)
+        rid_list = self.table.index.locate(self.table.key, primary_key)
+        #returns False if no elements returned 
+        if len(rid_list) == 0:
+            return False
+        rid = rid_list[0]
+        #returns False if record has already been deleted 
+        if rid == -1:
+            return False 
         self.table.rid_invalidation(rid)
         #remove rid key from index 
+        if hasattr(self.table, "key_to_rid"):
+            self.table.key_to_rid.pop(primary_key, None)
+        return True
 
     """
     # Insert a record with specified columns
@@ -52,10 +62,7 @@ class Query:
         recordObjects = []
         #returns False if no record exists in the given range
         if len(rid_list) == 0:
-            return False
-        #if all RIDs are -1 (indication that they are all deleted)
-        if all(i == -1 for i in rid_list):
-            return False
+            return []
         for i in rid_list:
             #skips RIDS which are -1 (indication that these records are deleted)
             if i == -1:
@@ -97,9 +104,7 @@ class Query:
         rid_list = self.table.index.locate(search_key_index, search_key)
         #returns False if no records are found or all are deleted
         if len(rid_list) == 0:
-            return False
-        if all(rid == -1 for rid in rid_list):
-            return False  
+            return False 
         recordObjects = []
         for i in rid_list:
             #skips over deleted records 
@@ -109,8 +114,8 @@ class Query:
             rid_ver = self.table.get_version_rid(i, relative_version)
             cols = []
             #skips over values not in the projected_columns_index
-            for index in projected_columns_index:
-                if index == 0:
+            for index, j in enumerate(projected_columns_index):
+                if j == 0:
                     cols.append(None)  
                 else:
                     #reads base record or tail record value depending on updates
@@ -130,6 +135,7 @@ class Query:
     # Returns True if update is succesful
     # Returns False if no records exist with given key or if the target record cannot be accessed due to 2PL locking
     """
+    #MAKE IT RUN FASTER
     def update(self, primary_key, *columns):
         #locates rid based on primary key
         rid_list = self.table.index.locate(self.table.key, primary_key)
@@ -165,18 +171,16 @@ class Query:
         summation = 0
         location = 4 + aggregate_column_index
         #returns a list of RIDs which are in the given range 
-        rid_list = self.index.locate_range(start_range, end_range, self.table.key)
+        rid_list = self.table.index.locate_range(start_range, end_range, self.table.key)
         #returns False if no record exists in the given range
         if len(rid_list) == 0:
             return False
         #if all RIDs are -1 (indication that they are all deleted)
-        if all(i == -1 for i in rid_list):
-            return False
         for i in rid_list:
             #skips RIDS which are -1 (indication that these records are deleted)
             if i == -1:
                 continue
-            #checks the indirection, retrieves the latest value from either the base or tail record, sums over
+                #checks the indirection, retrieves the latest value from either the base or tail record, sums over
             indirection = self.table.read_base_value(i, 1)
             if indirection == 0:
                 value = self.table.read_base_value(i, location)
@@ -197,11 +201,8 @@ class Query:
     # Returns False if no record exists in the given range
     """
     def sum_version(self, start_range, end_range, aggregate_column_index, relative_version):
-        rid_list = self.index.locate_range(start_range, end_range, self.table.key)
+        rid_list = self.table.index.locate_range(start_range, end_range, self.table.key)
         if len(rid_list) == 0:
-            return False
-        #if all RIDs are -1 (indication that they are all deleted)
-        if all(i == -1 for i in rid_list):
             return False
         summation = 0
         location = 4 + aggregate_column_index
