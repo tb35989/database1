@@ -161,26 +161,18 @@ class Table:
         
 
     def get_version_rid(self, base_rid, relative_version):
-        # Use helper function to return rid at indirection col from base rid
         indirection = self.read_base_value(base_rid, INDIRECTION_COLUMN)
-    
-        # If no tail updates, returns base RID
-        if indirection in (-1, None, 0):
+        if indirection in (-1, 0, None):
             return base_rid
-        
-        if relative_version == -1:
+        if relative_version == 0:
             return indirection
-
-        # Loops through until it reaches the relative version
         curr = indirection
-        hops = 0
-        target_hops = abs(relative_version) - 1
-        while curr not in (-1, 0, None) and hops < target_hops:
-            next_indirection = self.read_tail_value(curr, INDIRECTION_COLUMN) # Get previous indirection rid 
-            if next_indirection in (-1, 0, None):
-                # Account for deleted tails or only one tail 
-                return base_rid # Account for deleted tail
-            curr = next_indirection
-            hops += 1
+        steps = abs(relative_version)
+        while steps > 0:
+            prev = self.read_tail_value(curr, INDIRECTION_COLUMN)
+            if prev in (-1, 0, None, base_rid):
+                return base_rid
+            curr = prev
+            steps -= 1
 
         return curr
