@@ -176,6 +176,8 @@ class Query:
         if len(rid_list) == 0:
             return False
         #if all RIDs are -1 (indication that they are all deleted)
+        if self.table.read_base_value(i, RID_COLUMN) == -1:
+            continue
         for i in rid_list:
             #skips RIDS which are -1 (indication that these records are deleted)
             if i == -1:
